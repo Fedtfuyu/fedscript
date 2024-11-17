@@ -1,4 +1,3 @@
--- Tối ưu hóa game và tự động claim Mailbox
 for i, v in next, workspace:GetDescendants() do
     pcall(function()
         v.Transparency = 1
