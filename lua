@@ -338,7 +338,7 @@ function module.createScreen()
             local bigTextLabel = Instance.new("TextLabel")
             bigTextLabel.Size = UDim2.new(0.8, 0, 0.7, 0)
             bigTextLabel.Position = UDim2.new(0.1, 0, 0.15, 0)
-            bigTextLabel.BackgroundTransparency = 0
+            bigTextLabel.BackgroundTransparency = 1
             bigTextLabel.TextColor3 = Color3.new(1, 1, 1)
             bigTextLabel.Font = Enum.Font.SourceSansBold
             bigTextLabel.TextSize = 50
@@ -348,8 +348,6 @@ function module.createScreen()
         end)
     end
 end
-
-
 
 function module.findNearestCoin(container)
 	local coin
@@ -422,13 +420,9 @@ end)
 
 local status = module.checkAlt()
 if status > 4 then
-    local countdown = 30
-    for i = countdown, 1, -1 do
 game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
     -- print('alt-' .. status)
     -- module.randomGameMode()
-    task.wait(1)
-    end
 end
 
 task.wait(5)
