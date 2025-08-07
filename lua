@@ -318,40 +318,38 @@ end
 
 function module.createScreen()
     local success, err = pcall(function()
-        -- Không tạo lại nếu đã tồn tại
         if Player.PlayerGui:FindFirstChild("BlackScreenGui") then return end
 
         local screenGui = Instance.new("ScreenGui")
         screenGui.Name = "BlackScreenGui"
         screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        screenGui.IgnoreGuiInset = true
+        screenGui.IgnoreGuiInset = true -- Quan trọng
         screenGui.ResetOnSpawn = false
+        screenGui.DisplayOrder = 9999 -- Luôn ở trên cùng
         screenGui.Parent = Player.PlayerGui
 
-        -- Lấy số lượng hiện có
         local amount = tonumber(DataPlayer.Materials.Owned.BeachBalls2025) or 0
         local isGoalReached = amount >= 110000
 
-        -- Giao diện nền
         local backgroundFrame = Instance.new("Frame")
         backgroundFrame.Name = "Background"
         backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
         backgroundFrame.Position = UDim2.new(0, 0, 0, 0)
         backgroundFrame.BackgroundColor3 = isGoalReached and Color3.fromRGB(0, 255, 0) or Color3.new(0, 0, 0)
-        backgroundFrame.BackgroundTransparency = 0
+        backgroundFrame.BackgroundTransparency = 0 -- Không trong suốt
         backgroundFrame.ZIndex = 1
         backgroundFrame.Parent = screenGui
 
-        -- Văn bản
         local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(0.8, 0, 0.7, 0)
-        label.Position = UDim2.new(0.1, 0, 0.15, 0)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.Position = UDim2.new(0, 0, 0, 0)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 50
+        label.TextSize = 60
         label.TextWrapped = true
         label.Text = tostring(amount)
         label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextStrokeTransparency = 0.6 -- Tùy chọn thêm viền chữ
         label.ZIndex = 2
         label.Parent = backgroundFrame
     end)
@@ -360,7 +358,6 @@ function module.createScreen()
         warn("[createScreen] Lỗi: " .. tostring(err))
     end
 end
-
 
 
 function module.findNearestCoin(container)
