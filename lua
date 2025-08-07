@@ -316,48 +316,34 @@ function module.pcallTP(coin)
     return nil
 end
 
+local module = {}
+local Player = game:GetService("Players").LocalPlayer
+
 function module.createScreen()
-    local success, err = pcall(function()
-        if Player.PlayerGui:FindFirstChild("BlackScreenGui") then return end
+    if Player.PlayerGui:FindFirstChild("BlackScreenGui") then return end
 
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "BlackScreenGui"
-        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        screenGui.IgnoreGuiInset = true -- Quan trọng
-        screenGui.ResetOnSpawn = false
-        screenGui.DisplayOrder = 9999 -- Luôn ở trên cùng
-        screenGui.Parent = Player.PlayerGui
+    local gui = Instance.new("ScreenGui", Player.PlayerGui)
+    gui.Name = "BlackScreenGui"
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+    gui.DisplayOrder = 999999
 
-        local amount = tonumber(DataPlayer.Materials.Owned.BeachBalls2025) or 0
-        local isGoalReached = amount >= 110000
+    local amount = tonumber(_G.BeachBalls2025 or 0) -- bạn có thể đổi _G thành nơi bạn lưu biến
+    local bg = Instance.new("Frame", gui)
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = amount >= 110000 and Color3.fromRGB(0, 255, 0) or Color3.new(0, 0, 0)
 
-        local backgroundFrame = Instance.new("Frame")
-        backgroundFrame.Name = "Background"
-        backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
-        backgroundFrame.Position = UDim2.new(0, 0, 0, 0)
-        backgroundFrame.BackgroundColor3 = isGoalReached and Color3.fromRGB(0, 255, 0) or Color3.new(0, 0, 0)
-        backgroundFrame.BackgroundTransparency = 0 -- Không trong suốt
-        backgroundFrame.ZIndex = 1
-        backgroundFrame.Parent = screenGui
-
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.Position = UDim2.new(0, 0, 0, 0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 60
-        label.TextWrapped = true
-        label.Text = tostring(amount)
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.TextStrokeTransparency = 0.6 -- Tùy chọn thêm viền chữ
-        label.ZIndex = 2
-        label.Parent = backgroundFrame
-    end)
-
-    if not success then
-        warn("[createScreen] Lỗi: " .. tostring(err))
-    end
+    local text = Instance.new("TextLabel", bg)
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Font = Enum.Font.SourceSansBold
+    text.TextSize = 60
+    text.Text = tostring(amount)
+    text.TextColor3 = Color3.new(1, 1, 1)
 end
+
+return module
+
 
 
 function module.findNearestCoin(container)
