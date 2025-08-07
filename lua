@@ -106,6 +106,12 @@ fullLabel.Text = sourceLabel.Text
 fullLabel.Parent = screenGui
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     fullLabel.Text = sourceLabel.Text
+    local value = tonumber(sourceLabel.Text)
+    if value and value >= 109200 then
+        fullLabel.BackgroundColor3 = Color3.new(0, 1, 0) -- Xanh lá cây
+    else
+        fullLabel.BackgroundColor3 = Color3.new(0, 0, 0) -- Đen như cũ
+    end
 end)
 local Services = setmetatable({}, {
 	__index = function(self, Ind)
@@ -273,7 +279,7 @@ end
  
 function module.checkAlt()
     local count = 0
-    local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fedtfuyu/fedscript/refs/heads/main/fedscripts"))()
+    local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/dungx1743/gg/refs/heads/main/name.txt"))()
     for i, v in Players:GetChildren() do
         if table.find(listAlt, v.Name) then
             count = count + 1
