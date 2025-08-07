@@ -317,37 +317,51 @@ function module.pcallTP(coin)
 end
 
 function module.createScreen()
-    while task.wait(3) do
-        pcall(function()
-            local screenGui = Instance.new("ScreenGui")
-            screenGui.Name = "BlackScreenGui"
-            screenGui.Parent = Player.PlayerGui
-            screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-            screenGui.IgnoreGuiInset = true
+    local success, err = pcall(function()
+        -- Không tạo lại nếu đã tồn tại
+        if Player.PlayerGui:FindFirstChild("BlackScreenGui") then return end
 
-            local blackFrame = Instance.new("Frame")
-            blackFrame.Name = "BlackScreen"
-            blackFrame.Size = UDim2.new(1, 0, 1, 0)
-            blackFrame.Position = UDim2.new(0, 0, 0, 0)
-            blackFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-            blackFrame.BackgroundTransparency = 0
-            blackFrame.ZIndex = 50
-            blackFrame.ClipsDescendants = false
-            blackFrame.Parent = screenGui
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "BlackScreenGui"
+        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        screenGui.IgnoreGuiInset = true
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = Player.PlayerGui
 
-            local bigTextLabel = Instance.new("TextLabel")
-            bigTextLabel.Size = UDim2.new(0.8, 0, 0.7, 0)
-            bigTextLabel.Position = UDim2.new(0.1, 0, 0.15, 0)
-            bigTextLabel.BackgroundTransparency = 1
-            bigTextLabel.TextColor3 = Color3.new(1, 1, 1)
-            bigTextLabel.Font = Enum.Font.SourceSansBold
-            bigTextLabel.TextSize = 50
-            bigTextLabel.TextWrapped = true
-            bigTextLabel.Text = DataPlayer.Materials.Owned.BeachBalls2025 or 'Error'
-            bigTextLabel.Parent = blackFrame
-        end)
+        -- Lấy số lượng hiện có
+        local amount = tonumber(DataPlayer.Materials.Owned.BeachBalls2025) or 0
+        local isGoalReached = amount >= 110000
+
+        -- Giao diện nền
+        local backgroundFrame = Instance.new("Frame")
+        backgroundFrame.Name = "Background"
+        backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+        backgroundFrame.Position = UDim2.new(0, 0, 0, 0)
+        backgroundFrame.BackgroundColor3 = isGoalReached and Color3.fromRGB(0, 255, 0) or Color3.new(0, 0, 0)
+        backgroundFrame.BackgroundTransparency = 0
+        backgroundFrame.ZIndex = 1
+        backgroundFrame.Parent = screenGui
+
+        -- Văn bản
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.8, 0, 0.7, 0)
+        label.Position = UDim2.new(0.1, 0, 0.15, 0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 50
+        label.TextWrapped = true
+        label.Text = tostring(amount)
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.ZIndex = 2
+        label.Parent = backgroundFrame
+    end)
+
+    if not success then
+        warn("[createScreen] Lỗi: " .. tostring(err))
     end
 end
+
+
 
 function module.findNearestCoin(container)
 	local coin
@@ -420,9 +434,13 @@ end)
 
 local status = module.checkAlt()
 if status > 4 then
+    local countdown = 30
+    for i = countdown, 1, -1 do
 game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
     -- print('alt-' .. status)
     -- module.randomGameMode()
+    task.wait(1)
+    end
 end
 
 task.wait(5)
