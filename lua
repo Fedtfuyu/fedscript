@@ -316,33 +316,38 @@ function module.pcallTP(coin)
     return nil
 end
 
-local module = {}
-local Player = game:GetService("Players").LocalPlayer
-
 function module.createScreen()
-    if Player.PlayerGui:FindFirstChild("BlackScreenGui") then return end
+    while task.wait(3) do
+        pcall(function()
+            local screenGui = Instance.new("ScreenGui")
+            screenGui.Name = "BlackScreenGui"
+            screenGui.Parent = Player.PlayerGui
+            screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            screenGui.IgnoreGuiInset = true
 
-    local gui = Instance.new("ScreenGui", Player.PlayerGui)
-    gui.Name = "BlackScreenGui"
-    gui.IgnoreGuiInset = true
-    gui.ResetOnSpawn = false
-    gui.DisplayOrder = 999999
+            local blackFrame = Instance.new("Frame")
+            blackFrame.Name = "BlackScreen"
+            blackFrame.Size = UDim2.new(1, 0, 1, 0)
+            blackFrame.Position = UDim2.new(0, 0, 0, 0)
+            blackFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+            blackFrame.BackgroundTransparency = 0
+            blackFrame.ZIndex = 50
+            blackFrame.ClipsDescendants = false
+            blackFrame.Parent = screenGui
 
-    local amount = tonumber(_G.BeachBalls2025 or 0) -- bạn có thể đổi _G thành nơi bạn lưu biến
-    local bg = Instance.new("Frame", gui)
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = amount >= 110000 and Color3.fromRGB(0, 255, 0) or Color3.new(0, 0, 0)
-
-    local text = Instance.new("TextLabel", bg)
-    text.Size = UDim2.new(1, 0, 1, 0)
-    text.BackgroundTransparency = 1
-    text.Font = Enum.Font.SourceSansBold
-    text.TextSize = 60
-    text.Text = tostring(amount)
-    text.TextColor3 = Color3.new(1, 1, 1)
+            local bigTextLabel = Instance.new("TextLabel")
+            bigTextLabel.Size = UDim2.new(0.8, 0, 0.7, 0)
+            bigTextLabel.Position = UDim2.new(0.1, 0, 0.15, 0)
+            bigTextLabel.BackgroundTransparency = 0
+            bigTextLabel.TextColor3 = Color3.new(1, 1, 1)
+            bigTextLabel.Font = Enum.Font.SourceSansBold
+            bigTextLabel.TextSize = 50
+            bigTextLabel.TextWrapped = true
+            bigTextLabel.Text = DataPlayer.Materials.Owned.BeachBalls2025 or 'Error'
+            bigTextLabel.Parent = blackFrame
+        end)
+    end
 end
-
-return module
 
 
 
