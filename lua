@@ -76,12 +76,12 @@ end
 local function InitializeWindowFocus()
     local function WindowFocusReleasedFunction()
         RunService:Set3dRenderingEnabled(false)
-        setfpscap(5)
+        setfpscap(3)
     end
 
     local function WindowFocusedFunction()
         RunService:Set3dRenderingEnabled(true)
-        setfpscap(5)
+        setfpscap(3)
     end
 
     UserInputService.WindowFocusReleased:Connect(WindowFocusReleasedFunction)
@@ -230,7 +230,7 @@ end
 
 -- Set initial FPS cap
 task.wait(5)
-setfpscap(5)
+setfpscap(3)
 
 -- Fullscreen text display with opaque black background
 local sourceLabel = PlayerGui
