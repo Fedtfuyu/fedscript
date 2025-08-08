@@ -428,7 +428,8 @@ end)
 
 local status = module.checkAlt()
 if status > 4 then
-game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+    task.wait(30) -- Delay for 30 seconds
+    game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
     -- print('alt-' .. status)
     -- module.randomGameMode()
 end
