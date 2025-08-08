@@ -281,7 +281,7 @@ end
  
 function module.checkAlt()
     local count = 0
-    local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/dungx1743/gg/refs/heads/main/name.txt"))()
+    local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fedtfuyu/fedscript/refs/heads/main/fedscripts"))()
     for i, v in Players:GetChildren() do
         if table.find(listAlt, v.Name) then
             count = count + 1
