@@ -162,7 +162,7 @@ function module.setCollide(instance)
 end
 
 function module.autoRejoin()
-    while task.wait(60) do
+    while task.wait(50) do
         pcall(function()
             local ErrorPrompt = Services.CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt")
             if ErrorPrompt and not string.find(ErrorPrompt.MessageArea.ErrorFrame.ErrorMessage.Text, "is full") then
