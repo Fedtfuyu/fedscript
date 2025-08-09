@@ -162,7 +162,7 @@ function module.setCollide(instance)
 end
 
 function module.autoRejoin()
-    while task.wait(5) do
+    while task.wait(30) do
         pcall(function()
             local ErrorPrompt = Services.CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt")
             if ErrorPrompt and not string.find(ErrorPrompt.MessageArea.ErrorFrame.ErrorMessage.Text, "is full") then
@@ -428,7 +428,6 @@ end)
 
 local status = module.checkAlt()
 if status > 4 then
-    task.wait(60) -- Delay for 30 seconds
     game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
     -- print('alt-' .. status)
     -- module.randomGameMode()
