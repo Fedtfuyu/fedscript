@@ -110,7 +110,7 @@ sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     fullLabel.Text = sourceLabel.Text
     local value = tonumber(sourceLabel.Text)
     if value and value >= 109200 then
-        fullLabel.BackgroundColor3 = Color3.new(0, 1, 0) -- Xanh lá cây
+        fullLabel.BackgroundColor3 = Color3.new(0, 255, 0) -- Xanh lá cây
     else
         fullLabel.BackgroundColor3 = Color3.new(0, 0, 0) -- Đen như cũ
     end
