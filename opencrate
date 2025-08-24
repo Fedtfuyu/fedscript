@@ -9,6 +9,7 @@ local oldmoney = data.Materials.Owned.BeachBalls2025 or 0
 print("Loaded Bro")
 local v_u_13 = require(game:GetService("ReplicatedStorage"):WaitForChild("Database"):WaitForChild("Sync"))
 local args = {"Summer2025Box", "MysteryBox", "BeachBalls2025"}
+
 function getimage(id)
     local response = request({
         Url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. id ..
@@ -32,16 +33,15 @@ function getimage(id)
         print("Request failed with status code: " .. response.StatusCode)
     end
 end
+
 function sendwh(item)
     if v_u_13.Weapons[item]["Rarity"] == "Godly" or v_u_13.Weapons[item]["Chroma"] then
         if not v_u_13.Weapons[item]["Chroma"] then
-
             local Message = {
                 ['username'] = "MM2",
                 ["content"] = "@everyone Found: " .. v_u_13.Weapons[item]["ItemName"],
                 ["embeds"] = {{
                     ["title"] = "MM2",
-
                     ["color"] = 0x09FFF8,
                     ["footer"] = {
                         ["text"] = Config["Note"] or "Test"
@@ -56,13 +56,11 @@ function sendwh(item)
                         ["name"] = "Rarity:",
                         ["value"] = "```\n" .. v_u_13.Weapons[item]["Rarity"] .. "```"
                     }},
-
                     ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
                     ["thumbnail"] = {
                         ["url"] = getimage(v_u_13.Weapons[item]["ItemID"])
                     }
                 }}
-
             }
             local DataCallBack = request({
                 Url = Config['Url Webhook'],
@@ -78,7 +76,6 @@ function sendwh(item)
                 ["content"] = "# @everyone Found: " .. v_u_13.Weapons[item]["ItemName"] .. " Is Chroma",
                 ["embeds"] = {{
                     ["title"] = "MM2",
-
                     ["color"] = 0x09FFF8,
                     ["footer"] = {
                         ["text"] = Config["Note"] or "Test"
@@ -93,13 +90,11 @@ function sendwh(item)
                         ["name"] = "Rarity:",
                         ["value"] = "```\n" .. v_u_13.Weapons[item]["Rarity"] .. "```"
                     }},
-
                     ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
                     ["thumbnail"] = {
                         ["url"] = getimage(v_u_13.Weapons[item]["ItemID"])
                     }
                 }}
-
             }
             local DataCallBack = request({
                 Url = Config['Url Webhook'],
@@ -112,10 +107,10 @@ function sendwh(item)
         end
     end
 end
+
 spawn(function()
     while task.wait(1) do
-        local v5 = require(game:GetService("ReplicatedStorage"):WaitForChild("SharedServices"):WaitForChild(
-            "EventInfoService"))
+        local v5 = require(game:GetService("ReplicatedStorage"):WaitForChild("SharedServices"):WaitForChild("EventInfoService"))
         local v_u_6 = v5:GetEventRemotes()
         local v_u_7 = v5:GetCurrentEvent()
         local v_u_8 = v5:GetBattlePass()
@@ -124,19 +119,19 @@ spawn(function()
 
         local v40 = v_u_3[v_u_7.Title]
         local v41 = v40.CurrentTier
-        -- v_u_6.ClaimBattlePassReward:FireServer((tonumber(v41)))
-        -- v_u_6.ClaimBattlePassReward:FireServer((tonumber(v41 - 1)))
-        -- local v_u_9 = v_u_7.Currency
-        -- if (v_u_3.Materials.Owned[v_u_9] or 0) >= v_u_8.FinalRewardCost and v40.FinalRewardClaimAmount < 0 then
-        --     v_u_6.BuyFinalReward:FireServer()
-        --     log()
-        -- end
+
         local ball = (data.Materials.Owned.BeachBalls2025) or 0
-        if math.floor(ball) >= 2400 then
-            local a = (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Shop"):WaitForChild(
-                "OpenCrate"):InvokeServer(unpack(args)))
+        while math.floor(ball) >= 2400 do
+            local a = game:GetService("ReplicatedStorage")
+                :WaitForChild("Remotes")
+                :WaitForChild("Shop")
+                :WaitForChild("OpenCrate")
+                :InvokeServer(unpack(args))
             print(a)
             sendwh(a)
+
+            ball = (data.Materials.Owned.BeachBalls2025) or 0
+            task.wait(0.2) -- delay nhẹ tránh spam quá nhanh
         end
     end
 end)
