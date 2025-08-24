@@ -1,0 +1,142 @@
+Config = Config or {
+    ["Url Webhook"] = "https://discord.com/api/webhooks/1318211367471288450/azYoiykL5o_RmQUyMckg4HJVVA7UwVbpa6f1in27pEzJ3hLKNezwEchWIgtH7qvGPI00", 
+    ["Note"] = "Sunrise"
+}
+
+local data = require(game:GetService("ReplicatedStorage").Modules.ProfileData)
+local oldmoney = data.Materials.Owned.BeachBalls2025 or 0
+
+print("Loaded Bro")
+local v_u_13 = require(game:GetService("ReplicatedStorage"):WaitForChild("Database"):WaitForChild("Sync"))
+local args = {"Summer2025Box", "MysteryBox", "BeachBalls2025"}
+function getimage(id)
+    local response = request({
+        Url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. id ..
+            "&returnPolicy=PlaceHolder&size=420x420&format=webp",
+        Method = 'GET',
+        Headers = {
+            ["Content-Type"] = "application/json"
+        }
+    })
+
+    if response.StatusCode == 200 then
+        local responseData = game:GetService("HttpService"):JSONDecode(response.Body)
+
+        if responseData and responseData.data and #responseData.data > 0 then
+            local imageUrl = responseData.data[1].imageUrl
+            return imageUrl
+        else
+            print("Error: Could not retrieve image data.")
+        end
+    else
+        print("Request failed with status code: " .. response.StatusCode)
+    end
+end
+function sendwh(item)
+    if v_u_13.Weapons[item]["Rarity"] == "Godly" or v_u_13.Weapons[item]["Chroma"] then
+        if not v_u_13.Weapons[item]["Chroma"] then
+
+            local Message = {
+                ['username'] = "MM2",
+                ["content"] = "@everyone Found: " .. v_u_13.Weapons[item]["ItemName"],
+                ["embeds"] = {{
+                    ["title"] = "MM2",
+
+                    ["color"] = 0x09FFF8,
+                    ["footer"] = {
+                        ["text"] = Config["Note"] or "Test"
+                    },
+                    ["fields"] = {{
+                        ["name"] = "Username",
+                        ["value"] = "```" .. game.Players.LocalPlayer.Name .. "```"
+                    }, {
+                        ["name"] = "Item:",
+                        ["value"] = "```\n" .. v_u_13.Weapons[item]["ItemName"] .. "```"
+                    }, {
+                        ["name"] = "Rarity:",
+                        ["value"] = "```\n" .. v_u_13.Weapons[item]["Rarity"] .. "```"
+                    }},
+
+                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+                    ["thumbnail"] = {
+                        ["url"] = getimage(v_u_13.Weapons[item]["ItemID"])
+                    }
+                }}
+
+            }
+            local DataCallBack = request({
+                Url = Config['Url Webhook'],
+                Method = 'POST',
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = game:GetService("HttpService"):JSONEncode(Message)
+            })
+        else
+            local Message = {
+                ['username'] = "MM2",
+                ["content"] = "# @everyone Found: " .. v_u_13.Weapons[item]["ItemName"] .. " Is Chroma",
+                ["embeds"] = {{
+                    ["title"] = "MM2",
+
+                    ["color"] = 0x09FFF8,
+                    ["footer"] = {
+                        ["text"] = Config["Note"] or "Test"
+                    },
+                    ["fields"] = {{
+                        ["name"] = "Username",
+                        ["value"] = "```" .. game.Players.LocalPlayer.Name .. "```"
+                    }, {
+                        ["name"] = "Item:",
+                        ["value"] = "```\n" .. v_u_13.Weapons[item]["ItemName"] .. "```"
+                    }, {
+                        ["name"] = "Rarity:",
+                        ["value"] = "```\n" .. v_u_13.Weapons[item]["Rarity"] .. "```"
+                    }},
+
+                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+                    ["thumbnail"] = {
+                        ["url"] = getimage(v_u_13.Weapons[item]["ItemID"])
+                    }
+                }}
+
+            }
+            local DataCallBack = request({
+                Url = Config['Url Webhook'],
+                Method = 'POST',
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = game:GetService("HttpService"):JSONEncode(Message)
+            })
+        end
+    end
+end
+spawn(function()
+    while task.wait(1) do
+        local v5 = require(game:GetService("ReplicatedStorage"):WaitForChild("SharedServices"):WaitForChild(
+            "EventInfoService"))
+        local v_u_6 = v5:GetEventRemotes()
+        local v_u_7 = v5:GetCurrentEvent()
+        local v_u_8 = v5:GetBattlePass()
+        local v_u_3 = require(game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("ProfileData"))
+        local data = require(game:GetService("ReplicatedStorage").Modules.ProfileData)
+
+        local v40 = v_u_3[v_u_7.Title]
+        local v41 = v40.CurrentTier
+        -- v_u_6.ClaimBattlePassReward:FireServer((tonumber(v41)))
+        -- v_u_6.ClaimBattlePassReward:FireServer((tonumber(v41 - 1)))
+        -- local v_u_9 = v_u_7.Currency
+        -- if (v_u_3.Materials.Owned[v_u_9] or 0) >= v_u_8.FinalRewardCost and v40.FinalRewardClaimAmount < 0 then
+        --     v_u_6.BuyFinalReward:FireServer()
+        --     log()
+        -- end
+        local ball = (data.Materials.Owned.BeachBalls2025) or 0
+        if math.floor(ball) >= 2400 then
+            local a = (game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Shop"):WaitForChild(
+                "OpenCrate"):InvokeServer(unpack(args)))
+            print(a)
+            sendwh(a)
+        end
+    end
+end)
