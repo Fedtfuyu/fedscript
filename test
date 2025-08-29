@@ -56,28 +56,6 @@ screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 1000
 screenGui.Parent = playerGui
 
-local timerLabel = Instance.new("TextLabel")
-timerLabel.Size = UDim2.new(1, 0, 0.1, 0)
-timerLabel.Position = UDim2.new(0, 0, 0, 0)
-timerLabel.BackgroundTransparency = 1
-timerLabel.TextColor3 = Color3.new(1, 1, 1)
-timerLabel.Font = Enum.Font.GothamBold
-timerLabel.TextScaled = true
-timerLabel.Text = "00:00:00"
-timerLabel.Parent = screenGui
-
-local startTime = tick()
-
-task.spawn(function()
-    while task.wait(1) do
-        local elapsed = tick() - startTime
-        local hours = math.floor(elapsed / 3600)
-        local minutes = math.floor((elapsed % 3600) / 60)
-        local seconds = math.floor(elapsed % 60)
-        timerLabel.Text = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-    end
-end)
-
 local fullLabel = Instance.new("TextLabel")
 fullLabel.Size = UDim2.new(1, 0, 1, 0)
 fullLabel.Position = UDim2.new(0, 0, 0, 0)
@@ -89,7 +67,30 @@ fullLabel.Font = Enum.Font.GothamBold
 fullLabel.TextScaled = true
 fullLabel.TextWrapped = true
 fullLabel.Text = sourceLabel.Text
+fullLabel.ZIndex = 1
 fullLabel.Parent = screenGui
+
+local timerLabel = Instance.new("TextLabel")
+timerLabel.Size = UDim2.new(1, 0, 0.1, 0)
+timerLabel.Position = UDim2.new(0, 0, 0, 0)
+timerLabel.BackgroundTransparency = 1
+timerLabel.TextColor3 = Color3.new(1, 1, 1)
+timerLabel.Font = Enum.Font.GothamBold
+timerLabel.TextScaled = true
+timerLabel.Text = "00:00:00"
+timerLabel.ZIndex = 2
+timerLabel.Parent = screenGui
+
+local startTime = tick()
+task.spawn(function()
+    while task.wait(1) do
+        local elapsed = tick() - startTime
+        local hours = math.floor(elapsed / 3600)
+        local minutes = math.floor((elapsed % 3600) / 60)
+        local seconds = math.floor(elapsed % 60)
+        timerLabel.Text = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+    end
+end)
 
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     fullLabel.Text = sourceLabel.Text
@@ -100,6 +101,7 @@ sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
         fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
     end
 end)
+
 
 
 -- ==============================
