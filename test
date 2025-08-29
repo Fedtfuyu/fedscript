@@ -37,19 +37,9 @@ RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService"))
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- ==============================
--- 🔹 Fullscreen Text Display
--- ==============================
-local sourceLabel = playerGui
-    :WaitForChild("CrossPlatform")
-    :WaitForChild("Summer2025")
-    :WaitForChild("Container")
-    :WaitForChild("EventFrames")
-    :WaitForChild("BattlePass")
-    :WaitForChild("Info")
-    :WaitForChild("Tokens")
-    :WaitForChild("Container")
-    :WaitForChild("TextLabel")
+
+
+local startTime = tick()
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FullscreenTextDisplay"
@@ -68,11 +58,24 @@ fullLabel.TextStrokeTransparency = 0.5
 fullLabel.Font = Enum.Font.GothamBold
 fullLabel.TextScaled = true
 fullLabel.TextWrapped = true
-fullLabel.Text = sourceLabel.Text
+fullLabel.Text = "00:00:00\n" .. (sourceLabel.Text or "")
 fullLabel.Parent = screenGui
 
+local function formatTime(seconds)
+    local hrs = math.floor(seconds / 3600)
+    local mins = math.floor((seconds % 3600) / 60)
+    local secs = seconds % 60
+    return string.format("%02d:%02d:%02d", hrs, mins, secs)
+end
+
+local function updateText()
+    local elapsed = math.floor(tick() - startTime)
+    local textLine = sourceLabel.Text or ""
+    fullLabel.Text = formatTime(elapsed) .. "\n" .. textLine
+end
+
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
-    fullLabel.Text = sourceLabel.Text
+    updateText()
     local value = tonumber(sourceLabel.Text)
     if value and value >= 90000 then
         fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
@@ -80,6 +83,14 @@ sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
         fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
     end
 end)
+
+task.spawn(function()
+    while true do
+        updateText()
+        task.wait(1)
+    end
+end)
+
 
 
 
