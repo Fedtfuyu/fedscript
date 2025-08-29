@@ -1,6 +1,4 @@
--- ==============================
--- 🔹 Config cơ bản
--- ==============================
+
 getgenv().Config = {
     FPS = 60;
     Speed = 30;
@@ -9,9 +7,7 @@ getgenv().Config = {
     WEBHOOK_NOTE = "";
 }
 
--- ==============================
--- 🔹 Chuẩn bị Services
--- ==============================
+
 local Players = cloneref(game:GetService("Players"))
 repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
 getgenv().cloneref = cloneref or function(x) return x end
@@ -41,9 +37,7 @@ RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService"))
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- ==============================
--- 🔹 Fullscreen Text Display
--- ==============================
+
 local sourceLabel = playerGui
     :WaitForChild("CrossPlatform")
     :WaitForChild("Summer2025")
@@ -61,6 +55,28 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 1000
 screenGui.Parent = playerGui
+
+local timerLabel = Instance.new("TextLabel")
+timerLabel.Size = UDim2.new(1, 0, 0.1, 0)
+timerLabel.Position = UDim2.new(0, 0, 0, 0)
+timerLabel.BackgroundTransparency = 1
+timerLabel.TextColor3 = Color3.new(1, 1, 1)
+timerLabel.Font = Enum.Font.GothamBold
+timerLabel.TextScaled = true
+timerLabel.Text = "00:00:00"
+timerLabel.Parent = screenGui
+
+local startTime = tick()
+
+task.spawn(function()
+    while task.wait(1) do
+        local elapsed = tick() - startTime
+        local hours = math.floor(elapsed / 3600)
+        local minutes = math.floor((elapsed % 3600) / 60)
+        local seconds = math.floor(elapsed % 60)
+        timerLabel.Text = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+    end
+end)
 
 local fullLabel = Instance.new("TextLabel")
 fullLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -84,6 +100,7 @@ sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
         fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
     end
 end)
+
 
 -- ==============================
 -- 🔹 Auto click Button + Device
@@ -199,9 +216,7 @@ end)
 
 setfpscap(getgenv().Config and getgenv().Config.FPS or 0)
 
--- ==============================
--- 🔹 FPS Boost & Alt Check
--- ==============================
+
 local module = {}
 function module.boostFPS()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q'))()
