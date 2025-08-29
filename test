@@ -1,3 +1,4 @@
+
 getgenv().Config = {
     FPS = 60;
     Speed = 30;
@@ -5,6 +6,7 @@ getgenv().Config = {
     WEBHOOK_URL = "";
     WEBHOOK_NOTE = "";
 }
+
 
 local Players = cloneref(game:GetService("Players"))
 repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
@@ -35,8 +37,18 @@ RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService"))
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- ✅ FIX lỗi tick()
-local startTime = os.clock()
+
+
+local sourceLabel = playerGui
+    :WaitForChild("CrossPlatform")
+    :WaitForChild("Summer2025")
+    :WaitForChild("Container")
+    :WaitForChild("EventFrames")
+    :WaitForChild("BattlePass")
+    :WaitForChild("Info")
+    :WaitForChild("Tokens")
+    :WaitForChild("Container")
+    :WaitForChild("TextLabel")
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FullscreenTextDisplay"
@@ -55,24 +67,11 @@ fullLabel.TextStrokeTransparency = 0.5
 fullLabel.Font = Enum.Font.GothamBold
 fullLabel.TextScaled = true
 fullLabel.TextWrapped = true
-fullLabel.Text = "00:00:00\n" .. (sourceLabel.Text or "")
+fullLabel.Text = sourceLabel.Text
 fullLabel.Parent = screenGui
 
-local function formatTime(seconds)
-    local hrs = math.floor(seconds / 3600)
-    local mins = math.floor((seconds % 3600) / 60)
-    local secs = seconds % 60
-    return string.format("%02d:%02d:%02d", hrs, mins, secs)
-end
-
-local function updateText()
-    local elapsed = math.floor(os.clock() - startTime)
-    local textLine = sourceLabel.Text or ""
-    fullLabel.Text = formatTime(elapsed) .. "\n" .. textLine
-end
-
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
-    updateText()
+    fullLabel.Text = sourceLabel.Text
     local value = tonumber(sourceLabel.Text)
     if value and value >= 90000 then
         fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
@@ -81,12 +80,7 @@ sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
-task.spawn(function()
-    while true do
-        updateText()
-        task.wait(1)
-    end
-end)
+
 
 local button
 local deviceSelect
