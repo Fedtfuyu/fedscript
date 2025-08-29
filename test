@@ -2,7 +2,7 @@
 getgenv().Config = {
     FPS = 60;
     Speed = 30;
-    BlackScreen = true;
+    BlackScreen = false;
     WEBHOOK_URL = "";
     WEBHOOK_NOTE = "";
 }
