@@ -38,6 +38,7 @@ local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 
+-- tìm label gốc
 local sourceLabel = playerGui
     :WaitForChild("CrossPlatform")
     :WaitForChild("Summer2025")
@@ -49,6 +50,7 @@ local sourceLabel = playerGui
     :WaitForChild("Container")
     :WaitForChild("TextLabel")
 
+-- GUI chính
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FullscreenTextDisplay"
 screenGui.ResetOnSpawn = false
@@ -63,35 +65,37 @@ backgroundFrame.Position = UDim2.new(0, 0, 0, 0)
 backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
 backgroundFrame.Parent = screenGui
 
--- label đếm giờ (time)
+-- label đếm giờ (timerLabel)
 local timerLabel = Instance.new("TextLabel")
-timerLabel.Size = UDim2.new(1, 0, 0.15, 0)
+timerLabel.Size = UDim2.new(1, 0, 0.1, 0) -- nhỏ hơn
 timerLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-timerLabel.Position = UDim2.new(0.5, 0, 0.4, 0) -- cao hơn (40% màn hình)
+timerLabel.Position = UDim2.new(0.5, 0, 0.35, 0) -- trên 35% màn hình
 timerLabel.BackgroundTransparency = 1
 timerLabel.TextColor3 = Color3.new(1, 1, 1)
 timerLabel.Font = Enum.Font.GothamBold
 timerLabel.TextScaled = true
 timerLabel.Text = "00:00:00"
+timerLabel.ZIndex = 2
 timerLabel.Parent = backgroundFrame
 
 -- label chính (fullLabel)
 local fullLabel = Instance.new("TextLabel")
 fullLabel.Size = UDim2.new(1, 0, 0.15, 0)
 fullLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-fullLabel.Position = UDim2.new(0.5, 0, 0.6, 0) -- thấp hơn (60% màn hình)
+fullLabel.Position = UDim2.new(0.5, 0, 0.6, 0) -- dưới 60% màn hình
 fullLabel.BackgroundTransparency = 1
 fullLabel.TextColor3 = Color3.new(1, 1, 1)
 fullLabel.Font = Enum.Font.GothamBold
 fullLabel.TextScaled = true
 fullLabel.TextWrapped = true
-fullLabel.Text = sourceLabel.Text
+fullLabel.Text = sourceLabel.Text or "..."
+fullLabel.ZIndex = 2
 fullLabel.Parent = backgroundFrame
 
 -- update text + đổi màu nền khi >= 90000
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     fullLabel.Text = sourceLabel.Text
-    local value = tonumber(sourceLabel.Text)
+    local value = tonumber(sourceLabel.Text:gsub("%D", "")) -- loại ký tự không phải số
     if value and value >= 90000 then
         backgroundFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
     else
@@ -110,6 +114,7 @@ task.spawn(function()
         timerLabel.Text = string.format("%02d:%02d:%02d", h, m, s)
     end
 end)
+
 
 
 -- ==============================
