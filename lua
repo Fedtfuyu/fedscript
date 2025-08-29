@@ -133,7 +133,7 @@ local Http: HttpService = Services.HttpService
 local Players: Players = Services.Players
 local Player = Players.LocalPlayer
 local RunService: RunService = Services.RunService
-local Lighting: Lighting = Services.Lighting
+local Lighting: Lighting = Services.Lighting 
 local TeleportService: TeleportService = Services.TeleportService
 local CoinCollectedEvent: RemoteEvent = ReplicatedStorage.Remotes.Gameplay.CoinCollected
 local RoundStartEvent: RemoteEvent = ReplicatedStorage.Remotes.Gameplay.RoundStart
@@ -162,7 +162,7 @@ function module.setCollide(instance)
 end
 
 function module.autoRejoin()
-    while task.wait(50) do
+    while task.wait(30) do
         pcall(function()
             local ErrorPrompt = Services.CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt")
             if ErrorPrompt and not string.find(ErrorPrompt.MessageArea.ErrorFrame.ErrorMessage.Text, "is full") then
@@ -480,7 +480,7 @@ while task.wait(0.3) do
                     module.pcallTP(coinCurrent)
 
                     local count = 0
-                    while task.wait(0.8) do
+                    while task.wait(0.4) do
                         if count >= 4 then
                             break
                         end
@@ -494,7 +494,7 @@ while task.wait(0.3) do
                         module.pcallTP(coinNearest)
                         count = count + 1
                     end
-                    task.wait(2)
+                    task.wait(1)
                 end)
             end
         end
