@@ -56,51 +56,61 @@ screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 1000
 screenGui.Parent = playerGui
 
-local fullLabel = Instance.new("TextLabel")
-fullLabel.Size = UDim2.new(1, 0, 1, 0)
-fullLabel.Position = UDim2.new(0.5, 0, 0.55, 0)
-fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-fullLabel.BackgroundTransparency = 0
-fullLabel.TextColor3 = Color3.new(1, 1, 1)
-fullLabel.TextStrokeTransparency = 0.5
-fullLabel.Font = Enum.Font.GothamBold
-fullLabel.TextScaled = true
-fullLabel.TextWrapped = true
-fullLabel.Text = sourceLabel.Text
-fullLabel.ZIndex = 1
-fullLabel.Parent = screenGui
+-- nền đen toàn màn hình
+local backgroundFrame = Instance.new("Frame")
+backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+backgroundFrame.Position = UDim2.new(0, 0, 0, 0)
+backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+backgroundFrame.Parent = screenGui
 
+-- label đếm giờ
 local timerLabel = Instance.new("TextLabel")
-timerLabel.Size = UDim2.new(1, 0, 0.1, 0)
+timerLabel.Size = UDim2.new(1, 0, 0.2, 0)
+timerLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 timerLabel.Position = UDim2.new(0.5, 0, 0.45, 0)
 timerLabel.BackgroundTransparency = 1
 timerLabel.TextColor3 = Color3.new(1, 1, 1)
 timerLabel.Font = Enum.Font.GothamBold
 timerLabel.TextScaled = true
-timerLabel.Text = "Time: 00:00:00"
-timerLabel.ZIndex = 2
-timerLabel.Parent = screenGui
+timerLabel.Text = "00:00:00"
+timerLabel.Parent = backgroundFrame
 
-local startTime = tick()
-task.spawn(function()
-    while task.wait(1) do
-        local elapsed = tick() - startTime
-        local hours = math.floor(elapsed / 3600)
-        local minutes = math.floor((elapsed % 3600) / 60)
-        local seconds = math.floor(elapsed % 60)
-        timerLabel.Text = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-    end
-end)
+-- label chính
+local fullLabel = Instance.new("TextLabel")
+fullLabel.Size = UDim2.new(1, 0, 0.2, 0)
+fullLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+fullLabel.Position = UDim2.new(0.5, 0, 0.55, 0)
+fullLabel.BackgroundTransparency = 1
+fullLabel.TextColor3 = Color3.new(1, 1, 1)
+fullLabel.Font = Enum.Font.GothamBold
+fullLabel.TextScaled = true
+fullLabel.TextWrapped = true
+fullLabel.Text = sourceLabel.Text
+fullLabel.Parent = backgroundFrame
 
+-- update text + đổi màu nền khi >= 90000
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     fullLabel.Text = sourceLabel.Text
     local value = tonumber(sourceLabel.Text)
     if value and value >= 90000 then
-        fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        backgroundFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
     else
-        fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+        backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
     end
 end)
+
+-- chạy timer
+local startTime = tick()
+task.spawn(function()
+    while task.wait(1) do
+        local elapsed = tick() - startTime
+        local h = math.floor(elapsed / 3600)
+        local m = math.floor((elapsed % 3600) / 60)
+        local s = math.floor(elapsed % 60)
+        timerLabel.Text = string.format("%02d:%02d:%02d", h, m, s)
+    end
+end)
+
 
 
 
