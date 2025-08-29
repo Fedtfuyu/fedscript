@@ -1,4 +1,6 @@
-
+-- ==============================
+-- 🔹 Config cơ bản
+-- ==============================
 getgenv().Config = {
     FPS = 60;
     Speed = 30;
@@ -7,7 +9,9 @@ getgenv().Config = {
     WEBHOOK_NOTE = "";
 }
 
-
+-- ==============================
+-- 🔹 Chuẩn bị Services
+-- ==============================
 local Players = cloneref(game:GetService("Players"))
 repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
 getgenv().cloneref = cloneref or function(x) return x end
@@ -37,8 +41,9 @@ RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService"))
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-
-
+-- ==============================
+-- 🔹 Fullscreen Text Display
+-- ==============================
 local sourceLabel = playerGui
     :WaitForChild("CrossPlatform")
     :WaitForChild("Summer2025")
@@ -80,8 +85,9 @@ sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
-
-
+-- ==============================
+-- 🔹 Auto click Button + Device
+-- ==============================
 local button
 local deviceSelect
 
@@ -140,6 +146,9 @@ if not deviceSelect then
 	end
 end
 
+-- ==============================
+-- 🔹 Auto Coin Farm
+-- ==============================
 LocalPlayer.CharacterAdded:Connect(function(v)
     Character = v
     Humanoid = v:WaitForChild("Humanoid")
@@ -190,6 +199,9 @@ end)
 
 setfpscap(getgenv().Config and getgenv().Config.FPS or 0)
 
+-- ==============================
+-- 🔹 FPS Boost & Alt Check
+-- ==============================
 local module = {}
 function module.boostFPS()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q'))()
