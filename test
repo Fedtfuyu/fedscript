@@ -2,7 +2,7 @@
 getgenv().Config = {
     FPS = 60;
     Speed = 30;
-    BlackScreen = false;
+    BlackScreen = true;
     WEBHOOK_URL = "";
     WEBHOOK_NOTE = "";
 }
@@ -38,8 +38,7 @@ local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 
--- tìm label gốc
-local sourceLabel = playerGui
+local sourceLabel = player:WaitForChild("PlayerGui")
     :WaitForChild("CrossPlatform")
     :WaitForChild("Summer2025")
     :WaitForChild("Container")
@@ -50,72 +49,35 @@ local sourceLabel = playerGui
     :WaitForChild("Container")
     :WaitForChild("TextLabel")
 
--- GUI chính
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FullscreenTextDisplay"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 1000
-screenGui.Parent = playerGui
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- nền đen toàn màn hình
-local backgroundFrame = Instance.new("Frame")
-backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
-backgroundFrame.Position = UDim2.new(0, 0, 0, 0)
-backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-backgroundFrame.Parent = screenGui
-
--- label đếm giờ (timerLabel)
-local timerLabel = Instance.new("TextLabel")
-timerLabel.Size = UDim2.new(1, 0, 0.1, 0) -- nhỏ hơn
-timerLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-timerLabel.Position = UDim2.new(0.5, 0, 0.35, 0) -- trên 35% màn hình
-timerLabel.BackgroundTransparency = 1
-timerLabel.TextColor3 = Color3.new(1, 1, 1)
-timerLabel.Font = Enum.Font.GothamBold
-timerLabel.TextScaled = true
-timerLabel.Text = "00:00:00"
-timerLabel.ZIndex = 2
-timerLabel.Parent = backgroundFrame
-
--- label chính (fullLabel)
 local fullLabel = Instance.new("TextLabel")
-fullLabel.Size = UDim2.new(1, 0, 0.15, 0)
-fullLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-fullLabel.Position = UDim2.new(0.5, 0, 0.6, 0) -- dưới 60% màn hình
-fullLabel.BackgroundTransparency = 1
+fullLabel.Size = UDim2.new(1, 0, 1, 0)
+fullLabel.Position = UDim2.new(0, 0, 0, 0)
+fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+fullLabel.BackgroundTransparency = 0
 fullLabel.TextColor3 = Color3.new(1, 1, 1)
+fullLabel.TextStrokeTransparency = 0.5
 fullLabel.Font = Enum.Font.GothamBold
 fullLabel.TextScaled = true
 fullLabel.TextWrapped = true
-fullLabel.Text = sourceLabel.Text or "..."
-fullLabel.ZIndex = 2
-fullLabel.Parent = backgroundFrame
+fullLabel.Text = sourceLabel.Text
+fullLabel.Parent = screenGui
 
--- update text + đổi màu nền khi >= 90000
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     fullLabel.Text = sourceLabel.Text
-    local value = tonumber(sourceLabel.Text:gsub("%D", "")) -- loại ký tự không phải số
+    local value = tonumber(sourceLabel.Text)
     if value and value >= 90000 then
-        backgroundFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        fullLabel.BackgroundColor3 = Color3.new(0, 255, 0) -- Xanh lá cây
     else
-        backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+        fullLabel.BackgroundColor3 = Color3.new(0, 0, 0) -- Đen như cũ
     end
 end)
-
--- chạy timer
-local startTime = tick()
-task.spawn(function()
-    while task.wait(1) do
-        local elapsed = tick() - startTime
-        local h = math.floor(elapsed / 3600)
-        local m = math.floor((elapsed % 3600) / 60)
-        local s = math.floor(elapsed % 60)
-        timerLabel.Text = string.format("%02d:%02d:%02d", h, m, s)
-    end
-end)
-
-
 
 -- ==============================
 -- 🔹 Auto click Button + Device
