@@ -1,4 +1,6 @@
-
+-- ==============================
+-- 🔹 Config cơ bản
+-- ==============================
 getgenv().Config = {
     FPS = 60;
     Speed = 30;
@@ -7,7 +9,9 @@ getgenv().Config = {
     WEBHOOK_NOTE = "";
 }
 
-
+-- ==============================
+-- 🔹 Chuẩn bị Services
+-- ==============================
 local Players = cloneref(game:GetService("Players"))
 repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
 getgenv().cloneref = cloneref or function(x) return x end
@@ -37,8 +41,10 @@ RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService"))
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-
-local sourceLabel = player:WaitForChild("PlayerGui")
+-- ==============================
+-- 🔹 Fullscreen Text Display
+-- ==============================
+local sourceLabel = playerGui
     :WaitForChild("CrossPlatform")
     :WaitForChild("Summer2025")
     :WaitForChild("Container")
@@ -54,7 +60,7 @@ screenGui.Name = "FullscreenTextDisplay"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 1000
-screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Parent = playerGui
 
 local fullLabel = Instance.new("TextLabel")
 fullLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -73,9 +79,9 @@ sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
     fullLabel.Text = sourceLabel.Text
     local value = tonumber(sourceLabel.Text)
     if value and value >= 90000 then
-        fullLabel.BackgroundColor3 = Color3.new(0, 255, 0) -- Xanh lá cây
+        fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
     else
-        fullLabel.BackgroundColor3 = Color3.new(0, 0, 0) -- Đen như cũ
+        fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
     end
 end)
 
@@ -193,7 +199,9 @@ end)
 
 setfpscap(getgenv().Config and getgenv().Config.FPS or 0)
 
-
+-- ==============================
+-- 🔹 FPS Boost & Alt Check
+-- ==============================
 local module = {}
 function module.boostFPS()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q'))()
