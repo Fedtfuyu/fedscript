@@ -158,7 +158,7 @@ local function Tween(targetCFrame: CFrame)
 end
 
 local function getNearestCoin()
-    local nearest, nearestDist = nil, 1000
+    local nearest, nearestDist = nil, 2000
     for _, v in next, CollectionService:GetTagged("ServerCoinPart") do
         if v and v:IsA("BasePart") and v:GetAttribute("CoinID") ~= nil and v:GetAttribute("Collected") == nil and v:FindFirstChildWhichIsA("TouchTransmitter") then
             local dist = (HumanoidRootPart.Position - v.Position).Magnitude
