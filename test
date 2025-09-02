@@ -1,11 +1,3 @@
-getgenv().Config = {
-    FPS = 3;
-    Speed = 30;
-    BlackScreen = true;
-    WEBHOOK_URL = "";
-    WEBHOOK_NOTE = "";
-}
-
 local Players = cloneref(game:GetService("Players"))
 repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
 getgenv().cloneref = cloneref or function(x) return x end
@@ -113,7 +105,6 @@ task.spawn(function()
         Black.ZIndex = 9999
         Black.Visible = true
 
-        -- thêm playerGui bị thiếu
         local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
         local sourceLabel = playerGui
@@ -131,7 +122,7 @@ task.spawn(function()
         screenGui.Name = "FullscreenTextDisplay"
         screenGui.ResetOnSpawn = false
         screenGui.IgnoreGuiInset = true
-        screenGui.DisplayOrder = 10001 -- cao hơn Black
+        screenGui.DisplayOrder = 10001
         screenGui.Parent = BlankScreen
 
         local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel")
@@ -144,7 +135,7 @@ task.spawn(function()
         timeLabel.Font = Enum.Font.GothamBold
         timeLabel.TextScaled = true
         timeLabel.TextWrapped = true
-        timeLabel.Text = "Time: 00:00:00"
+        timeLabel.Text = "Time: 00:00:00" -- lúc đầu luôn là 00:00:00
         timeLabel.Parent = screenGui
 
         local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel")
@@ -157,7 +148,7 @@ task.spawn(function()
         middleLabel.Font = Enum.Font.GothamBold
         middleLabel.TextScaled = true
         middleLabel.TextWrapped = true
-        middleLabel.Text = "Total : " .. sourceLabel.Text
+        middleLabel.Text = "Total : " .. sourceLabel.Text -- khởi tạo đúng giá trị hiện tại
         middleLabel.Parent = screenGui
 
         local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
@@ -170,24 +161,33 @@ task.spawn(function()
         countLabel.Font = Enum.Font.GothamBold
         countLabel.TextScaled = true
         countLabel.TextWrapped = true
-        countLabel.Text = "+0"
+        countLabel.Text = "+0" -- lúc đầu luôn là +0
         countLabel.Parent = screenGui
 
-        -- fix chỗ này: dùng Changed thay vì chỉ PropertyChangedSignal
-        sourceLabel.Changed:Connect(function(prop)
-            if prop == "Text" then
-                local value = tonumber(sourceLabel.Text)
-                if value then
-                    totalCount += 1
-                    middleLabel.Text = "Total : " .. sourceLabel.Text
-                    countLabel.Text = "+" .. totalCount
-                    if value >= 90000 then
-                        Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        -- khởi tạo lastText bằng giá trị hiện tại của sourceLabel
+        local lastText = sourceLabel.Text:gsub("[%D]", "")
+
+        -- Loop kiểm tra TextLabel
+        task.spawn(function()
+            while screenGui and screenGui.Parent do
+                task.wait(0.2)
+                local currentText = sourceLabel.Text:gsub("[%D]", "")
+                if currentText ~= lastText and lastText ~= "" then -- chỉ cộng nếu lastText không rỗng
+                    local value = tonumber(currentText)
+                    if value then
+                        totalCount += 1
+                        middleLabel.Text = "Total : " .. sourceLabel.Text
+                        countLabel.Text = "+" .. totalCount
+                        if value >= 90000 then
+                            Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                        end
                     end
                 end
+                lastText = currentText
             end
         end)
 
+        -- Loop cập nhật thời gian
         task.spawn(function()
             while screenGui and screenGui.Parent do
                 task.wait(1)
@@ -196,7 +196,6 @@ task.spawn(function()
                 local mins = math.floor((elapsed % 3600) / 60)
                 local secs = elapsed % 60
                 local uptime = string.format("%02d:%02d:%02d", hours, mins, secs)
-
                 timeLabel.Text = "Time: " .. uptime
             end
         end)
