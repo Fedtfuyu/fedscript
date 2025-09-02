@@ -214,7 +214,6 @@ task.spawn(function()
             fullLabel.Parent = screenGui
 
             sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
-                print("change")
                 fullLabel.Text = sourceLabel.Text
                 local value = tonumber(sourceLabel.Text)
                 if value and value >= 90000 then
