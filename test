@@ -1,13 +1,3 @@
-
-getgenv().Config = {
-    FPS = 5;
-    Speed = 30;
-    BlackScreen = true;
-    WEBHOOK_URL = "";
-    WEBHOOK_NOTE = "";
-}
-
-
 local Players = cloneref(game:GetService("Players"))
 repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
 getgenv().cloneref = cloneref or function(x) return x end
@@ -70,6 +60,7 @@ fullLabel.Text = sourceLabel.Text
 fullLabel.Parent = screenGui
 
 sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
+    print("change")
     fullLabel.Text = sourceLabel.Text
     local value = tonumber(sourceLabel.Text)
     if value and value >= 90000 then
@@ -97,6 +88,7 @@ repeat
 until button or deviceSelect
 
 if button then
+    --firesignal(button.MouseButton1Click)
 	for _, v in ipairs(getconnections(button.MouseButton1Click)) do
 		if v.Function then v.Function() end
 	end
@@ -230,3 +222,27 @@ local status = module.checkAlt()
 if status > 4 then
     TeleportService:Teleport(game.PlaceId, LocalPlayer)
 end
+
+spawn(function()
+    local DataPlayer = require(ReplicatedStorage.Modules.ProfileData)
+    local currentCoin = DataPlayer.Materials.Owned.BeachBalls2025
+    while task.wait(300) do
+        pcall(function()
+            if DataPlayer.Materials.Owned.BeachBalls2025 > currentCoin then
+                currentCoin = DataPlayer.Materials.Owned.BeachBalls2025
+            elseif DataPlayer.Materials.Owned.BeachBalls2025 == currentCoin then
+                Players:Kick('Server Error')
+                TeleportService.TeleportService:Teleport(game.PlaceId, Players)
+            end
+        end)
+    end
+end)
+
+
+
+game:GetService("GuiService").ErrorMessageChanged:Connect(newcclosure(function()
+    if game:GetService("GuiService"):GetErrorType() == Enum.ConnectionError.DisconnectErrors and not ({[9] = 1, [10] = 1, [13] = 1, [17] = 1, [18] = 1, [21] = 1, [26] = 1})[game:GetService("GuiService"):GetErrorCode()] then
+        while true do TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) task.wait(3) end
+    end
+end))
+
