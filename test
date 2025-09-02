@@ -28,49 +28,6 @@ local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 
-local sourceLabel = playerGui
-    :WaitForChild("CrossPlatform")
-    :WaitForChild("Summer2025")
-    :WaitForChild("Container")
-    :WaitForChild("EventFrames")
-    :WaitForChild("BattlePass")
-    :WaitForChild("Info")
-    :WaitForChild("Tokens")
-    :WaitForChild("Container")
-    :WaitForChild("TextLabel")
-
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "FullscreenTextDisplay"
-screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = true
-screenGui.DisplayOrder = 1000
-screenGui.Parent = playerGui
-
-local fullLabel = Instance.new("TextLabel")
-fullLabel.Size = UDim2.new(1, 0, 1, 0)
-fullLabel.Position = UDim2.new(0, 0, 0, 0)
-fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-fullLabel.BackgroundTransparency = 0
-fullLabel.TextColor3 = Color3.new(1, 1, 1)
-fullLabel.TextStrokeTransparency = 0.5
-fullLabel.Font = Enum.Font.GothamBold
-fullLabel.TextScaled = true
-fullLabel.TextWrapped = true
-fullLabel.Text = sourceLabel.Text
-fullLabel.Parent = screenGui
-
-sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
-    print("change")
-    fullLabel.Text = sourceLabel.Text
-    local value = tonumber(sourceLabel.Text)
-    if value and value >= 90000 then
-        fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-    else
-        fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-    end
-end)
-
-
 local button
 local deviceSelect
 
@@ -130,6 +87,60 @@ if not deviceSelect then
 	end
 end
 
+task.spawn(function()
+    while task.wait() do
+        if getgenv().Config and getgenv().Config.BlackScreen then
+            local BlankScreen = LocalPlayer.PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+            BlankScreen.Name = "Blank" BlankScreen.ResetOnSpawn = false BlankScreen.DisplayOrder = -math.huge BlankScreen.IgnoreGuiInset = true
+            local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
+            Black.Name = "Black Screen" Black.Size = UDim2.new(1, 0, 1, 0) Black.BackgroundColor3 = Color3.new(0, 0, 0) Black.ZIndex = -math.huge
+            Black.Visible = true
+
+            -- ✅ Add sourceLabel + fullLabel
+            local sourceLabel = playerGui
+                :WaitForChild("CrossPlatform")
+                :WaitForChild("Summer2025")
+                :WaitForChild("Container")
+                :WaitForChild("EventFrames")
+                :WaitForChild("BattlePass")
+                :WaitForChild("Info")
+                :WaitForChild("Tokens")
+                :WaitForChild("Container")
+                :WaitForChild("TextLabel")
+
+            local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
+            screenGui.Name = "FullscreenTextDisplay"
+            screenGui.ResetOnSpawn = false
+            screenGui.IgnoreGuiInset = true
+            screenGui.DisplayOrder = 1000
+            screenGui.Parent = BlankScreen
+
+            local fullLabel = screenGui:FindFirstChild("FullLabel") or Instance.new("TextLabel")
+            fullLabel.Name = "FullLabel"
+            fullLabel.Size = UDim2.new(1, 0, 1, 0)
+            fullLabel.Position = UDim2.new(0, 0, 0, 0)
+            fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+            fullLabel.BackgroundTransparency = 0
+            fullLabel.TextColor3 = Color3.new(1, 1, 1)
+            fullLabel.TextStrokeTransparency = 0.5
+            fullLabel.Font = Enum.Font.GothamBold
+            fullLabel.TextScaled = true
+            fullLabel.TextWrapped = true
+            fullLabel.Text = sourceLabel.Text
+            fullLabel.Parent = screenGui
+
+            sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
+                fullLabel.Text = sourceLabel.Text
+                local value = tonumber(sourceLabel.Text)
+                if value and value >= 90000 then
+                    fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                else
+                    fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+                end
+            end)
+        end
+    end
+end)
 
 LocalPlayer.CharacterAdded:Connect(function(v)
     Character = v
@@ -206,18 +217,6 @@ end
 --     return count
 -- end
 
-task.spawn(function()
-    while task.wait() do
-        if getgenv().Config and getgenv().Config.BlackScreen then
-            local BlankScreen = LocalPlayer.PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-            BlankScreen.Name = "Blank" BlankScreen.ResetOnSpawn = false BlankScreen.DisplayOrder = -math.huge BlankScreen.IgnoreGuiInset = true
-            local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
-            Black.Name = "Black Screen" Black.Size = UDim2.new(1, 0, 1, 0) Black.BackgroundColor3 = Color3.new(0, 0, 0) Black.ZIndex = -math.huge
-            Black.Visible = true
-        end
-    end
-end)
-
 -- local status = module.checkAlt()
 -- if status > 4 then
 --     TeleportService:Teleport(game.PlaceId, LocalPlayer)
@@ -245,4 +244,3 @@ game:GetService("GuiService").ErrorMessageChanged:Connect(newcclosure(function()
         while true do TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) task.wait(3) end
     end
 end))
-
