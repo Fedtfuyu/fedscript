@@ -1,0 +1,257 @@
+getgenv().Config = {
+    FPS = 3;
+    Speed = 30;
+    BlackScreen = true; -- true = hiện màn hình đen, false = tắt
+    WEBHOOK_URL = "";
+    WEBHOOK_NOTE = "";
+}
+
+local Players = cloneref(game:GetService("Players"))
+repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
+getgenv().cloneref = cloneref or function(x) return x end
+workspace = cloneref(workspace) or cloneref(Workspace) or (getrenv and (getrenv().workspace or getrenv().Workspace)) or cloneref(game:GetService("Workspace"))
+Workspace = Workspace or clonefunction(workspace)
+PlaceId, JobId = game.PlaceId, game.JobId
+getfenv = getfenv or function() return _ENV end
+
+COREGUI = cloneref(game:GetService("CoreGui"))
+RunService = cloneref(game:GetService("RunService"))
+VirtualUser = cloneref(game:GetService("VirtualUser"))
+TweenService = cloneref(game:GetService("TweenService"))
+HttpService = cloneref(game:GetService("HttpService"))
+Players = cloneref(game:GetService("Players"))
+ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
+Lighting = cloneref(game:GetService("Lighting"))
+CollectionService = cloneref(game:GetService("CollectionService"))
+UserInputService = cloneref(game:GetService("UserInputService"))
+VirtualInputManager = cloneref(game:GetService("VirtualInputManager"))
+ReplicatedFirst = cloneref(game:GetService("ReplicatedFirst"))
+StarterGui = cloneref(game:GetService("StarterGui"))
+TeleportService = cloneref(game:GetService("TeleportService"))
+GuiService = cloneref(game:GetService("GuiService"))
+StarterPlayer = cloneref(game:GetService("StarterPlayer"))
+RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService"))
+
+local LocalPlayer = Players.LocalPlayer
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+
+local button
+local deviceSelect
+
+repeat
+	task.wait()
+	if not button then
+		button = playerGui:FindFirstChild("Join")
+			and playerGui.Join:FindFirstChild("Friends")
+			and playerGui.Join.Friends:FindFirstChild("Play")
+	end
+
+	if not deviceSelect then
+		deviceSelect = playerGui:FindFirstChild("DeviceSelect")
+	end
+until button or deviceSelect
+
+if button then
+    --firesignal(button.MouseButton1Click)
+	for _, v in ipairs(getconnections(button.MouseButton1Click)) do
+		if v.Function then v.Function() end
+	end
+end
+
+if deviceSelect and deviceSelect:FindFirstChild("Container") then
+	local tablet = deviceSelect.Container:FindFirstChild("Tablet")
+	local tabletButton = tablet and tablet:FindFirstChild("Button")
+	if tabletButton then
+		for _, v in ipairs(getconnections(tabletButton.MouseButton1Click)) do
+			if v.Function then v.Function() end
+		end
+	end
+end
+
+task.wait(3)
+
+if not button then
+	button = playerGui:FindFirstChild("Join")
+		and playerGui.Join:FindFirstChild("Friends")
+		and playerGui.Join.Friends:FindFirstChild("Play")
+	if button then
+		for _, v in ipairs(getconnections(button.MouseButton1Click)) do
+			if v.Function then v.Function() end
+		end
+	end
+end
+
+if not deviceSelect then
+	deviceSelect = playerGui:FindFirstChild("DeviceSelect")
+	if deviceSelect and deviceSelect:FindFirstChild("Container") then
+		local tablet = deviceSelect.Container:FindFirstChild("Tablet")
+		local tabletButton = tablet and tablet:FindFirstChild("Button")
+		if tabletButton then
+			for _, v in ipairs(getconnections(tabletButton.MouseButton1Click)) do
+				if v.Function then v.Function() end
+			end
+		end
+	end
+end
+
+
+LocalPlayer.CharacterAdded:Connect(function(v)
+    Character = v
+    Humanoid = v:WaitForChild("Humanoid")
+    HumanoidRootPart = v:WaitForChild("HumanoidRootPart")
+end)
+if LocalPlayer.Character then
+    Character = LocalPlayer.Character
+    Humanoid = Character:FindFirstChild("Humanoid") or Character:WaitForChild("Humanoid")
+    HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart") or Character:WaitForChild("HumanoidRootPart")
+end
+
+local function Tween(targetCFrame: CFrame)
+    TweenService:Create(HumanoidRootPart, TweenInfo.new(
+        (targetCFrame.Position - HumanoidRootPart.Position).Magnitude / (getgenv().Config and getgenv().Config.Speed or 20),
+        Enum.EasingStyle.Linear
+    ), {CFrame = targetCFrame}):Play()
+end
+
+local function getNearestCoin()
+    local nearest, nearestDist = nil, 2000
+    for _, v in next, CollectionService:GetTagged("ServerCoinPart") do
+        if v and v:IsA("BasePart") and v:GetAttribute("CoinID") ~= nil and v:GetAttribute("Collected") == nil and v:FindFirstChildWhichIsA("TouchTransmitter") then
+            local dist = (HumanoidRootPart.Position - v.Position).Magnitude
+            if dist < nearestDist then nearestDist = dist nearest = v end
+        end
+    end
+    return nearest
+end
+
+task.spawn(function()
+    xpcall(function()
+        while task.wait(0.2) do
+            if LocalPlayer.PlayerGui.MainGUI.Game:FindFirstChild("EarnedXP") and LocalPlayer.PlayerGui.MainGUI.Game.EarnedXP.Visible then
+                local v = getNearestCoin()
+                if v then
+                    repeat task.wait(0.2)
+                        if (v.Position - HumanoidRootPart.Position).Magnitude <= 15 then
+                            Character:SetPrimaryPartCFrame(v.CFrame)
+                        else
+                            Tween(v.CFrame)
+                        end
+                    until not v:IsDescendantOf(workspace) or not v:FindFirstChildWhichIsA("TouchTransmitter") or v:GetAttribute("Collected") ~= nil
+                end
+            end
+        end
+    end, function(e) warn("ERROR: ".. e)end)
+end)
+
+setfpscap(getgenv().Config and getgenv().Config.FPS or 0)
+
+local module = {}
+function module.boostFPS()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q'))()
+    local Terrain = workspace:FindFirstChildOfClass('Terrain')
+    Terrain.WaterWaveSize = 0
+    Terrain.WaterWaveSpeed = 0
+    Terrain.WaterReflectance = 0
+    Terrain.WaterTransparency = 1
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.FogStart = 9e9
+    settings().Rendering.QualityLevel = 1 :: any
+end
+
+-- function module.checkAlt()
+--     local count = 0
+--     local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fedtfuyu/fedscript/refs/heads/main/fedscripts"))()
+--     for _, v in Players:GetChildren() do
+--         if table.find(listAlt, v.Name) then
+--             count = count + 1
+--         end
+--     end
+--     return count
+-- end
+
+task.spawn(function()
+    while task.wait() do
+        if getgenv().Config and getgenv().Config.BlackScreen then
+            local BlankScreen = LocalPlayer.PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+            BlankScreen.Name = "Blank" BlankScreen.ResetOnSpawn = false BlankScreen.DisplayOrder = -math.huge BlankScreen.IgnoreGuiInset = true
+            local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
+            Black.Name = "Black Screen" Black.Size = UDim2.new(1, 0, 1, 0) Black.BackgroundColor3 = Color3.new(0, 0, 0) Black.ZIndex = -math.huge
+            Black.Visible = true
+
+            -- ✅ Add sourceLabel + fullLabel
+            local sourceLabel = playerGui
+                :WaitForChild("CrossPlatform")
+                :WaitForChild("Summer2025")
+                :WaitForChild("Container")
+                :WaitForChild("EventFrames")
+                :WaitForChild("BattlePass")
+                :WaitForChild("Info")
+                :WaitForChild("Tokens")
+                :WaitForChild("Container")
+                :WaitForChild("TextLabel")
+
+            local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
+            screenGui.Name = "FullscreenTextDisplay"
+            screenGui.ResetOnSpawn = false
+            screenGui.IgnoreGuiInset = true
+            screenGui.DisplayOrder = 1000
+            screenGui.Parent = BlankScreen
+
+            local fullLabel = screenGui:FindFirstChild("FullLabel") or Instance.new("TextLabel")
+            fullLabel.Name = "FullLabel"
+            fullLabel.Size = UDim2.new(1, 0, 1, 0)
+            fullLabel.Position = UDim2.new(0, 0, 0, 0)
+            fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+            fullLabel.BackgroundTransparency = 0
+            fullLabel.TextColor3 = Color3.new(1, 1, 1)
+            fullLabel.TextStrokeTransparency = 0.5
+            fullLabel.Font = Enum.Font.GothamBold
+            fullLabel.TextScaled = true
+            fullLabel.TextWrapped = true
+            fullLabel.Text = sourceLabel.Text
+            fullLabel.Parent = screenGui
+
+            sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
+                print("change")
+                fullLabel.Text = sourceLabel.Text
+                local value = tonumber(sourceLabel.Text)
+                if value and value >= 90000 then
+                    fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                else
+                    fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+                end
+            end)
+        end
+    end
+end)
+
+
+-- local status = module.checkAlt()
+-- if status > 4 then
+--     TeleportService:Teleport(game.PlaceId, LocalPlayer)
+-- end
+
+spawn(function()
+    local DataPlayer = require(ReplicatedStorage.Modules.ProfileData)
+    local currentCoin = DataPlayer.Materials.Owned.BeachBalls2025
+    while task.wait(300) do
+        pcall(function()
+            if DataPlayer.Materials.Owned.BeachBalls2025 > currentCoin then
+                currentCoin = DataPlayer.Materials.Owned.BeachBalls2025
+            elseif DataPlayer.Materials.Owned.BeachBalls2025 == currentCoin then
+                Players:Kick('Server Error')
+                TeleportService.TeleportService:Teleport(game.PlaceId, Players)
+            end
+        end)
+    end
+end)
+
+
+
+game:GetService("GuiService").ErrorMessageChanged:Connect(newcclosure(function()
+    if game:GetService("GuiService"):GetErrorType() == Enum.ConnectionError.DisconnectErrors and not ({[9] = 1, [10] = 1, [13] = 1, [17] = 1, [18] = 1, [21] = 1, [26] = 1})[game:GetService("GuiService"):GetErrorCode()] then
+        while true do TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) task.wait(3) end
+    end
+end))
