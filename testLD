@@ -1,7 +1,7 @@
 getgenv().Config = {
     FPS = 3;
     Speed = 30;
-    BlackScreen = true; -- true = hiện màn hình đen, false = tắt
+    BlackScreen = true;
     WEBHOOK_URL = "";
     WEBHOOK_NOTE = "";
 }
@@ -96,59 +96,107 @@ if not deviceSelect then
 end
 
 task.spawn(function()
-    while task.wait() do
-        if getgenv().Config and getgenv().Config.BlackScreen then
-            local BlankScreen = LocalPlayer.PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-            BlankScreen.Name = "Blank" BlankScreen.ResetOnSpawn = false BlankScreen.DisplayOrder = -math.huge BlankScreen.IgnoreGuiInset = true
-            local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
-            Black.Name = "Black Screen" Black.Size = UDim2.new(1, 0, 1, 0) Black.BackgroundColor3 = Color3.new(0, 0, 0) Black.ZIndex = -math.huge
-            Black.Visible = true
+    local totalCount = 0
+    local startTime = tick()
 
-            -- ✅ Add sourceLabel + fullLabel
-            local sourceLabel = playerGui
-                :WaitForChild("CrossPlatform")
-                :WaitForChild("Summer2025")
-                :WaitForChild("Container")
-                :WaitForChild("EventFrames")
-                :WaitForChild("BattlePass")
-                :WaitForChild("Info")
-                :WaitForChild("Tokens")
-                :WaitForChild("Container")
-                :WaitForChild("TextLabel")
+    if getgenv().Config and getgenv().Config.BlackScreen then
+        local BlankScreen = LocalPlayer.PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+        BlankScreen.Name = "Blank"
+        BlankScreen.ResetOnSpawn = false
+        BlankScreen.DisplayOrder = 10000
+        BlankScreen.IgnoreGuiInset = true
 
-            local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
-            screenGui.Name = "FullscreenTextDisplay"
-            screenGui.ResetOnSpawn = false
-            screenGui.IgnoreGuiInset = true
-            screenGui.DisplayOrder = 1000
-            screenGui.Parent = BlankScreen
+        local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
+        Black.Name = "Black Screen"
+        Black.Size = UDim2.new(1, 0, 1, 0)
+        Black.BackgroundColor3 = Color3.new(0, 0, 0)
+        Black.ZIndex = 9999
+        Black.Visible = true
 
-            local fullLabel = screenGui:FindFirstChild("FullLabel") or Instance.new("TextLabel")
-            fullLabel.Name = "FullLabel"
-            fullLabel.Size = UDim2.new(1, 0, 1, 0)
-            fullLabel.Position = UDim2.new(0, 0, 0, 0)
-            fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-            fullLabel.BackgroundTransparency = 0
-            fullLabel.TextColor3 = Color3.new(1, 1, 1)
-            fullLabel.TextStrokeTransparency = 0.5
-            fullLabel.Font = Enum.Font.GothamBold
-            fullLabel.TextScaled = true
-            fullLabel.TextWrapped = true
-            fullLabel.Text = sourceLabel.Text
-            fullLabel.Parent = screenGui
+        local sourceLabel = playerGui
+            :WaitForChild("CrossPlatform")
+            :WaitForChild("Summer2025")
+            :WaitForChild("Container")
+            :WaitForChild("EventFrames")
+            :WaitForChild("BattlePass")
+            :WaitForChild("Info")
+            :WaitForChild("Tokens")
+            :WaitForChild("Container")
+            :WaitForChild("TextLabel")
 
-            sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
-                fullLabel.Text = sourceLabel.Text
-                local value = tonumber(sourceLabel.Text)
-                if value and value >= 90000 then
-                    fullLabel.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                else
-                    fullLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+        local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
+        screenGui.Name = "FullscreenTextDisplay"
+        screenGui.ResetOnSpawn = false
+        screenGui.IgnoreGuiInset = true
+        screenGui.DisplayOrder = 10001 -- cao hơn Black
+        screenGui.Parent = BlankScreen
+
+        local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel")
+        timeLabel.Name = "TimeLabel"
+        timeLabel.Size = UDim2.new(1, 0, 0.1, 0)
+        timeLabel.Position = UDim2.new(0, 0, 0.25, 0)
+        timeLabel.BackgroundTransparency = 1
+        timeLabel.TextColor3 = Color3.new(1, 1, 1)
+        timeLabel.TextStrokeTransparency = 0.5
+        timeLabel.Font = Enum.Font.GothamBold
+        timeLabel.TextScaled = true
+        timeLabel.TextWrapped = true
+        timeLabel.Text = "Time: 00:00:00"
+        timeLabel.Parent = screenGui
+
+        local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel")
+        middleLabel.Name = "MiddleLabel"
+        middleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+        middleLabel.Position = UDim2.new(0, 0, 0.4, 0)
+        middleLabel.BackgroundTransparency = 1
+        middleLabel.TextColor3 = Color3.new(1, 1, 1)
+        middleLabel.TextStrokeTransparency = 0.5
+        middleLabel.Font = Enum.Font.GothamBold
+        middleLabel.TextScaled = true
+        middleLabel.TextWrapped = true
+        middleLabel.Text = "Total : " .. sourceLabel.Text
+        middleLabel.Parent = screenGui
+
+        local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
+        countLabel.Name = "CountLabel"
+        countLabel.Size = UDim2.new(1, 0, 0.2, 0)
+        countLabel.Position = UDim2.new(0, 0, 0.55, 0)
+        countLabel.BackgroundTransparency = 1
+        countLabel.TextColor3 = Color3.new(1, 1, 1)
+        countLabel.TextStrokeTransparency = 0.5
+        countLabel.Font = Enum.Font.GothamBold
+        countLabel.TextScaled = true
+        countLabel.TextWrapped = true
+        countLabel.Text = "+0"
+        countLabel.Parent = screenGui
+
+        sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
+            local value = tonumber(sourceLabel.Text)
+            if value then
+                totalCount += 1
+                middleLabel.Text = "Total : " .. sourceLabel.Text
+                countLabel.Text = "+" .. totalCount
+                if value >= 90000 then
+                    Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
                 end
-            end)
-        end
+            end
+        end)
+
+        task.spawn(function()
+            while screenGui and screenGui.Parent do
+                task.wait(1)
+                local elapsed = math.floor(tick() - startTime)
+                local hours = math.floor(elapsed / 3600)
+                local mins = math.floor((elapsed % 3600) / 60)
+                local secs = elapsed % 60
+                local uptime = string.format("%02d:%02d:%02d", hours, mins, secs)
+
+                timeLabel.Text = "Time: " .. uptime
+            end
+        end)
     end
 end)
+
 
 LocalPlayer.CharacterAdded:Connect(function(v)
     Character = v
