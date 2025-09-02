@@ -195,16 +195,16 @@ function module.boostFPS()
     settings().Rendering.QualityLevel = 1 :: any
 end
 
-function module.checkAlt()
-    local count = 0
-    local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fedtfuyu/fedscript/refs/heads/main/fedscripts"))()
-    for _, v in Players:GetChildren() do
-        if table.find(listAlt, v.Name) then
-            count = count + 1
-        end
-    end
-    return count
-end
+-- function module.checkAlt()
+--     local count = 0
+--     local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fedtfuyu/fedscript/refs/heads/main/fedscripts"))()
+--     for _, v in Players:GetChildren() do
+--         if table.find(listAlt, v.Name) then
+--             count = count + 1
+--         end
+--     end
+--     return count
+-- end
 
 task.spawn(function()
     while task.wait() do
@@ -218,10 +218,10 @@ task.spawn(function()
     end
 end)
 
-local status = module.checkAlt()
-if status > 4 then
-    TeleportService:Teleport(game.PlaceId, LocalPlayer)
-end
+-- local status = module.checkAlt()
+-- if status > 4 then
+--     TeleportService:Teleport(game.PlaceId, LocalPlayer)
+-- end
 
 spawn(function()
     local DataPlayer = require(ReplicatedStorage.Modules.ProfileData)
