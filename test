@@ -304,3 +304,56 @@ game:GetService("GuiService").ErrorMessageChanged:Connect(newcclosure(function()
         while true do TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) task.wait(3) end
     end
 end))
+
+
+-- StarterPlayer > StarterPlayerScripts > LocalScript
+
+local TeleportService = game:GetService("TeleportService")
+local localPlayer = Players.LocalPlayer
+local retry = 0
+local isTeleporting = false
+local MIN_PLAYERS = 4 -- nếu ít hơn số này thì sẽ rejoin
+
+-- Hàm rejoin
+local function rejoin()
+	if RunService:IsStudio() then return end -- tránh chạy trong Studio
+	if isTeleporting then return end -- tránh spam teleport
+
+	isTeleporting = true
+	local ok, err = pcall(function()
+		TeleportService:Teleport(game.PlaceId, localPlayer)
+	end)
+
+	if not ok then
+		warn("Teleport failed:", err)
+		if retry < 3 then
+			retry += 1
+			task.wait(5)
+			isTeleporting = false
+			rejoin()
+		else
+			warn("Rejoin failed sau 3 lần thử.")
+		end
+	end
+end
+
+-- Hàm kiểm tra số người
+local function checkAndRejoin()
+	if #Players:GetPlayers() < MIN_PLAYERS then
+		rejoin()
+	end
+end
+task.delay(3, checkAndRejoin)
+Players.PlayerRemoving:Connect(function(p)
+	if p ~= localPlayer then
+		task.delay(1, checkAndRejoin)
+	end
+end)
+
+task.spawn(function()
+	while task.wait(20) do
+		checkAndRejoin()
+	end
+end)
+
+
