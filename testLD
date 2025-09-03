@@ -100,10 +100,6 @@ task.spawn(function()
     local startTime = tick()
 
     if getgenv().Config and getgenv().Config.BlackScreen then
-        local LocalPlayer = Players.LocalPlayer
-        local playerGui = LocalPlayer:WaitForChild("PlayerGui")
-
-        -- Tạo ScreenGui nền đen
         local BlankScreen = LocalPlayer.PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", LocalPlayer.PlayerGui)
         BlankScreen.Name = "Blank"
         BlankScreen.ResetOnSpawn = false
@@ -117,7 +113,6 @@ task.spawn(function()
         Black.ZIndex = 9999
         Black.Visible = true
 
-        -- ScreenGui hiển thị text
         local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
         screenGui.Name = "FullscreenTextDisplay"
         screenGui.ResetOnSpawn = false
@@ -125,7 +120,6 @@ task.spawn(function()
         screenGui.DisplayOrder = 10001
         screenGui.Parent = BlankScreen
 
-        -- Time label
         local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel")
         timeLabel.Name = "TimeLabel"
         timeLabel.Size = UDim2.new(1, 0, 0.1, 0)
@@ -139,7 +133,6 @@ task.spawn(function()
         timeLabel.Text = "Time: 00:00:00"
         timeLabel.Parent = screenGui
 
-        -- Middle label
         local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel")
         middleLabel.Name = "MiddleLabel"
         middleLabel.Size = UDim2.new(1, 0, 0.2, 0)
@@ -153,7 +146,6 @@ task.spawn(function()
         middleLabel.Text = "Total : 0"
         middleLabel.Parent = screenGui
 
-        -- Count label
         local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
         countLabel.Name = "CountLabel"
         countLabel.Size = UDim2.new(1, 0, 0.2, 0)
@@ -167,35 +159,46 @@ task.spawn(function()
         countLabel.Text = "+0"
         countLabel.Parent = screenGui
 
-        -- **Chờ sourceLabel xuất hiện**
+        -- Tìm sourceLabel an toàn với loop
         local sourceLabel
         repeat
-            task.wait(0.2)
+            task.wait(0.1)
             local success, label = pcall(function()
-                return playerGui:WaitForChild("CrossPlatform"):WaitForChild("Summer2025")
-                    :WaitForChild("Container"):WaitForChild("EventFrames")
-                    :WaitForChild("BattlePass"):WaitForChild("Info")
-                    :WaitForChild("Tokens"):WaitForChild("Container")
-                    :WaitForChild("TextLabel")
+                return playerGui:WaitForChild("CrossPlatform", 1)
+                    :WaitForChild("Summer2025", 1)
+                    :WaitForChild("Container", 1)
+                    :WaitForChild("EventFrames", 1)
+                    :WaitForChild("BattlePass", 1)
+                    :WaitForChild("Info", 1)
+                    :WaitForChild("Tokens", 1)
+                    :WaitForChild("Container", 1)
+                    :WaitForChild("TextLabel", 1)
             end)
-            if success then sourceLabel = label end
+            if success and label then
+                sourceLabel = label
+            end
         until sourceLabel
 
-        local lastText = tonumber(sourceLabel.Text:gsub("[%D]", "")) or 0
+        -- Khởi tạo giá trị ban đầu
+        local lastValue = tonumber(sourceLabel.Text:gsub("%D", "")) or 0
+        middleLabel.Text = "Total : " .. lastValue
 
-        -- Loop kiểm tra TextLabel
+        -- Loop cập nhật TextLabel
         task.spawn(function()
-            while screenGui and screenGui.Parent and sourceLabel do
+            while screenGui and screenGui.Parent do
                 task.wait(0.2)
-                local currentText = tonumber(sourceLabel.Text:gsub("[%D]", "")) or 0
-                if currentText ~= lastText then
-                    totalCount += currentText - lastText
-                    middleLabel.Text = "Total : " .. currentText
-                    countLabel.Text = "+" .. totalCount
-                    lastText = currentText
-
-                    if currentText >= 90000 then
-                        Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                local ok, currentText = pcall(function()
+                    return tonumber(sourceLabel.Text:gsub("%D", ""))
+                end)
+                if ok and currentText then
+                    if currentText ~= lastValue then
+                        totalCount += currentText - lastValue
+                        middleLabel.Text = "Total : " .. currentText
+                        countLabel.Text = "+" .. totalCount
+                        if currentText >= 90000 then
+                            Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                        end
+                        lastValue = currentText
                     end
                 end
             end
@@ -209,8 +212,7 @@ task.spawn(function()
                 local hours = math.floor(elapsed / 3600)
                 local mins = math.floor((elapsed % 3600) / 60)
                 local secs = elapsed % 60
-                local uptime = string.format("%02d:%02d:%02d", hours, mins, secs)
-                timeLabel.Text = "Time: " .. uptime
+                timeLabel.Text = string.format("Time: %02d:%02d:%02d", hours, mins, secs)
             end
         end)
     end
