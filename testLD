@@ -117,7 +117,7 @@ task.spawn(function()
         Black.ZIndex = 9999
         Black.Visible = true
 
-        -- Tạo ScreenGui để hiển thị text
+        -- ScreenGui hiển thị text
         local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
         screenGui.Name = "FullscreenTextDisplay"
         screenGui.ResetOnSpawn = false
@@ -125,7 +125,7 @@ task.spawn(function()
         screenGui.DisplayOrder = 10001
         screenGui.Parent = BlankScreen
 
-        -- Label thời gian
+        -- Time label
         local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel")
         timeLabel.Name = "TimeLabel"
         timeLabel.Size = UDim2.new(1, 0, 0.1, 0)
@@ -139,7 +139,7 @@ task.spawn(function()
         timeLabel.Text = "Time: 00:00:00"
         timeLabel.Parent = screenGui
 
-        -- Label tổng số
+        -- Middle label
         local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel")
         middleLabel.Name = "MiddleLabel"
         middleLabel.Size = UDim2.new(1, 0, 0.2, 0)
@@ -153,7 +153,7 @@ task.spawn(function()
         middleLabel.Text = "Total : 0"
         middleLabel.Parent = screenGui
 
-        -- Label tăng dần
+        -- Count label
         local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
         countLabel.Name = "CountLabel"
         countLabel.Size = UDim2.new(1, 0, 0.2, 0)
@@ -167,7 +167,7 @@ task.spawn(function()
         countLabel.Text = "+0"
         countLabel.Parent = screenGui
 
-        -- Tìm sourceLabel an toàn (loop chờ label thật sự xuất hiện)
+        -- **Chờ sourceLabel xuất hiện**
         local sourceLabel
         repeat
             task.wait(0.2)
