@@ -335,7 +335,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- TP (mượt kiểu tween nhưng là TP vi-bước; hạ thấp nhẹ để không rớt)
+-- TP (mượt kiểu tween nhưng là TP vi-bước; hạ thấp nhẹ để không rớt) - tăng tốc nhẹ
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -356,10 +356,10 @@ local function tpToCoin(coin)
     -- Đích TP: ngay tâm coin nhưng đặt thấp một xíu để bám sàn (0.9)
     local targetCF = coin.CFrame * CFrame.new(0, 0.9, 0)
 
-    -- "Tween giả" bằng TP vi-bước (không dùng TweenService)
+    -- "Tween giả" bằng TP vi-bước (tăng tốc nhẹ)
     local startCF = hrp.CFrame
-    local steps = 6           -- mượt hơn thì tăng; nhanh hơn thì giảm
-    local dt    = 0.01        -- nhịp TP vi-bước
+    local steps = 5           -- trước 6 -> 5 cho nhanh hơn 1 xíu
+    local dt    = 0.008       -- trước 0.01 -> 0.008
     for i = 1, steps do
         local alpha = i/steps
         hrp.CFrame = startCF:Lerp(targetCF, alpha)
@@ -372,7 +372,7 @@ local function tpToCoin(coin)
 
     -- Cố gắng "chạm" coin nhanh
     local t0 = os.clock()
-    while os.clock() - t0 < 0.9 do
+    while os.clock() - t0 < 0.75 do -- trước 0.9 -> 0.75
         if not coin.Parent then break end
         if not coin:FindFirstChild("TouchInterest") then break end
         forceTouch(hrp, coin)
@@ -408,7 +408,7 @@ end
 -- ====== NEAREST-SAFE SELECTOR ======
 local MAX_DIST, MAX_Y = 80, 30   -- chặt hơn: |ΔY| 30
 local GROUND_DEPTH = 65
-local TP_DELAY = 0.15
+local TP_DELAY = 0.2
 
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
