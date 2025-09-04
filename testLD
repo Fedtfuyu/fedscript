@@ -298,7 +298,8 @@ end
 
 local function createStagingAbove(coin)
     if not coin or not coin.Parent then return end
-    ensurePlatform("StagePart", coin.CFrame * CFrame.new(0, 12, 0), Vector3.new(16, 1, 16))
+    -- Giảm độ cao staging: +12 -> +6 (TP thấp hơn)
+    ensurePlatform("StagePart", coin.CFrame * CFrame.new(0, 6, 0), Vector3.new(16, 1, 16))
 end
 
 -- FireTouchInterest fallback (nếu executor hỗ trợ)
@@ -350,18 +351,18 @@ local function tpToCoin(coin)
         hrp.AssemblyAngularVelocity = Vector3.new()
     end)
 
-    -- Bước 1: staging phía trên coin
+    -- Bước 1: staging phía trên coin (đã hạ còn +6)
     createStagingAbove(coin)
     task.wait(0.02)
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 12, 0)
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 6, 0)
     task.wait(0.05)
 
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
 
-    -- Bước 2: sàn dưới coin + đặt vào coin
+    -- Bước 2: sàn dưới coin + đặt vào coin (đã hạ từ +2 xuống +1)
     createPartSafe(coin)
     task.wait(0.02)
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 2, 0)
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 1, 0)
 
     local t0 = os.clock()
     while os.clock() - t0 < 1.25 do
@@ -399,7 +400,8 @@ end
 -- ====== NEAREST-SAFE SELECTOR ======
 local MAX_DIST, MAX_Y = 80, 30   -- chặt hơn: |ΔY| 30
 local GROUND_DEPTH = 65
-local TP_DELAY = 0.3
+-- Chậm lại một xíu: 0.3 -> 0.4 (thân thiện giả lập & multi-acc)
+local TP_DELAY = 0.4
 
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
@@ -455,7 +457,7 @@ task.spawn(function()
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
-    while task.wait(TP_DELAY) do -- pacing an toàn
+    while task.wait(TP_DELAY) do -- pacing an toàn (đã tăng nhẹ)
         if not AutofarmON then continue end
         local container = findCoinContainer()
         if not container then continue end
