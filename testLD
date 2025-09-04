@@ -335,7 +335,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- TP (mượt kiểu tween nhưng là TP vi-bước; hạ thấp nhẹ để không rớt) - tăng tốc nhẹ
+-- TP (mượt kiểu tween nhưng là TP vi-bước; hạ thấp nhẹ để không rớt) - NHANH HƠN
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -353,13 +353,13 @@ local function tpToCoin(coin)
     -- Tạo sàn an toàn dưới coin để không rơi map
     createPartSafe(coin)
 
-    -- Đích TP: ngay tâm coin nhưng đặt thấp một xíu để bám sàn (0.9)
+    -- Đích TP: ngay tâm coin nhưng đặt thấp một xíu để bám sàn
     local targetCF = coin.CFrame * CFrame.new(0, 0.9, 0)
 
-    -- "Tween giả" bằng TP vi-bước (tăng tốc nhẹ)
+    -- "Tween giả" bằng TP vi-bước (nhanh hơn)
     local startCF = hrp.CFrame
-    local steps = 5           -- trước 6 -> 5 cho nhanh hơn 1 xíu
-    local dt    = 0.008       -- trước 0.01 -> 0.008
+    local steps = 3           -- giảm bước để nhanh hơn
+    local dt    = 0.006       -- khung thời gian mỗi bước nhỏ hơn
     for i = 1, steps do
         local alpha = i/steps
         hrp.CFrame = startCF:Lerp(targetCF, alpha)
@@ -372,7 +372,7 @@ local function tpToCoin(coin)
 
     -- Cố gắng "chạm" coin nhanh
     local t0 = os.clock()
-    while os.clock() - t0 < 0.75 do -- trước 0.9 -> 0.75
+    while os.clock() - t0 < 0.6 do -- rút ngắn thời gian thử chạm
         if not coin.Parent then break end
         if not coin:FindFirstChild("TouchInterest") then break end
         forceTouch(hrp, coin)
@@ -406,9 +406,9 @@ local function findCoinContainer()
 end
 
 -- ====== NEAREST-SAFE SELECTOR ======
-local MAX_DIST, MAX_Y = 80, 30   -- chặt hơn: |ΔY| 30
+local MAX_DIST, MAX_Y = 80, 30
 local GROUND_DEPTH = 65
-local TP_DELAY = 0.2
+local TP_DELAY = 0.12  -- nhanh hơn vòng lặp (trước 0.2)
 
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
@@ -418,7 +418,6 @@ local function hasGroundBelow(pos)
     return res ~= nil
 end
 
--- Phát hiện coin nằm sát rìa: cần có ít nhất 2/4 ray cạnh có mặt đất
 local function isEdgeCoin(pos)
     local offsets = {
         Vector3.new(6, 0, 0), Vector3.new(-6, 0, 0),
@@ -467,14 +466,12 @@ task.spawn(function()
         local ok, vis = pcall(function()
             return PlayerGui.MainGUI.Game.CoinBags.Container.BeachBall.Visible
         end)
-        -- Nếu không thấy UI túi, coi như hết round -> mở khóa lại FullBag
         if not ok or not vis then
             FullBag = false
         end
 
         AutofarmON = ok and vis and (not FullBag) or false
 
-        -- khi FullBag thì TẮT Noclip ngay
         if FullBag then
             setNoclip(false)
         else
@@ -488,7 +485,7 @@ task.spawn(function()
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
-    while task.wait(TP_DELAY) do -- pacing an toàn
+    while task.wait(TP_DELAY) do
         if not AutofarmON then continue end
         local container = findCoinContainer()
         if not container then continue end
@@ -558,7 +555,7 @@ local function rejoin()
 end
 
 local function checkAndRejoinByPlayers()
-    local MIN_PLAYERS = 4 -- hardcoded theo yêu cầu
+    local MIN_PLAYERS = 4
     if os.clock() - lastRejoinAt < 20 then return end
     if #Players:GetPlayers() < MIN_PLAYERS then
         lastRejoinAt = os.clock()
