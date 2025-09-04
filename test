@@ -1,113 +1,148 @@
-local Players = cloneref(game:GetService("Players"))
-repeat task.wait(0.5) until game:IsLoaded() and Players.LocalPlayer
 getgenv().cloneref = cloneref or function(x) return x end
-workspace = cloneref(workspace) or cloneref(Workspace) or (getrenv and (getrenv().workspace or getrenv().Workspace)) or cloneref(game:GetService("Workspace"))
-Workspace = Workspace or clonefunction(workspace)
-PlaceId, JobId = game.PlaceId, game.JobId
-getfenv = getfenv or function() return _ENV end
+local Services = setmetatable({}, {
+    __index = function(self, Ind)
+        local ok, res = pcall(function() return game:GetService(Ind) end)
+        if ok and res then rawset(self, Ind, cloneref(res)); return res end
+        return nil
+    end
+})
 
-COREGUI = cloneref(game:GetService("CoreGui"))
-RunService = cloneref(game:GetService("RunService"))
-VirtualUser = cloneref(game:GetService("VirtualUser"))
-TweenService = cloneref(game:GetService("TweenService"))
-HttpService = cloneref(game:GetService("HttpService"))
-Players = cloneref(game:GetService("Players"))
-ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
-Lighting = cloneref(game:GetService("Lighting"))
-CollectionService = cloneref(game:GetService("CollectionService"))
-UserInputService = cloneref(game:GetService("UserInputService"))
-VirtualInputManager = cloneref(game:GetService("VirtualInputManager"))
-ReplicatedFirst = cloneref(game:GetService("ReplicatedFirst"))
-StarterGui = cloneref(game:GetService("StarterGui"))
-TeleportService = cloneref(game:GetService("TeleportService"))
-GuiService = cloneref(game:GetService("GuiService"))
-StarterPlayer = cloneref(game:GetService("StarterPlayer"))
-RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService"))
+local Players            = Services.Players
+local RunService         = Services.RunService
+local TweenService       = Services.TweenService
+local HttpService        = Services.HttpService
+local ReplicatedStorage  = Services.ReplicatedStorage
+local Lighting           = Services.Lighting
+local TeleportService    = Services.TeleportService
+local GuiService         = Services.GuiService
+local CoreGui            = Services.CoreGui
 
 local LocalPlayer = Players.LocalPlayer
-local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+repeat task.wait(5) until game:IsLoaded() and LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+workspace.FallenPartsDestroyHeight = -math.huge
 
-local button
-local deviceSelect
-
-repeat
-	task.wait()
-	if not button then
-		button = playerGui:FindFirstChild("Join")
-			and playerGui.Join:FindFirstChild("Friends")
-			and playerGui.Join.Friends:FindFirstChild("Play")
-	end
-
-	if not deviceSelect then
-		deviceSelect = playerGui:FindFirstChild("DeviceSelect")
-	end
-until button or deviceSelect
-
-if button then
-    --firesignal(button.MouseButton1Click)
-	for _, v in ipairs(getconnections(button.MouseButton1Click)) do
-		if v.Function then v.Function() end
-	end
-end
-
-if deviceSelect and deviceSelect:FindFirstChild("Container") then
-	local tablet = deviceSelect.Container:FindFirstChild("Tablet")
-	local tabletButton = tablet and tablet:FindFirstChild("Button")
-	if tabletButton then
-		for _, v in ipairs(getconnections(tabletButton.MouseButton1Click)) do
-			if v.Function then v.Function() end
-		end
-	end
-end
-
-task.wait(3)
-
-if not button then
-	button = playerGui:FindFirstChild("Join")
-		and playerGui.Join:FindFirstChild("Friends")
-		and playerGui.Join.Friends:FindFirstChild("Play")
-	if button then
-		for _, v in ipairs(getconnections(button.MouseButton1Click)) do
-			if v.Function then v.Function() end
-		end
-	end
-end
-
-if not deviceSelect then
-	deviceSelect = playerGui:FindFirstChild("DeviceSelect")
-	if deviceSelect and deviceSelect:FindFirstChild("Container") then
-		local tablet = deviceSelect.Container:FindFirstChild("Tablet")
-		local tabletButton = tablet and tablet:FindFirstChild("Button")
-		if tabletButton then
-			for _, v in ipairs(getconnections(tabletButton.MouseButton1Click)) do
-				if v.Function then v.Function() end
-			end
-		end
-	end
+-- =========================
+-- AUTO CLICK UI "PLAY" / "DEVICE" (nếu có)
+-- =========================
+local function pressIfHasConnections(buttonObj)
+    if not buttonObj then return end
+    for _, v in ipairs(getconnections(buttonObj.MouseButton1Click)) do
+        if v.Function then pcall(v.Function) end
+    end
 end
 
 task.spawn(function()
-    local totalCount = 0
-    local startTime = tick()
+    local button, deviceSelect
+    repeat
+        task.wait()
+        if not button then
+            button = PlayerGui:FindFirstChild("Join")
+                and PlayerGui.Join:FindFirstChild("Friends")
+                and PlayerGui.Join.Friends:FindFirstChild("Play")
+        end
+        if not deviceSelect then
+            deviceSelect = PlayerGui:FindFirstChild("DeviceSelect")
+        end
+    until button or deviceSelect
 
-    if getgenv().Config and getgenv().Config.BlackScreen then
-        local BlankScreen = LocalPlayer.PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-        BlankScreen.Name = "Blank"
-        BlankScreen.ResetOnSpawn = false
-        BlankScreen.DisplayOrder = 10000
-        BlankScreen.IgnoreGuiInset = true
+    pressIfHasConnections(button)
+    if deviceSelect and deviceSelect:FindFirstChild("Container") then
+        local tablet = deviceSelect.Container:FindFirstChild("Tablet")
+        local tabletButton = tablet and tablet:FindFirstChild("Button")
+        pressIfHasConnections(tabletButton)
+    end
 
-        local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
-        Black.Name = "Black Screen"
-        Black.Size = UDim2.new(1, 0, 1, 0)
-        Black.BackgroundColor3 = Color3.new(0, 0, 0)
-        Black.ZIndex = 9999
-        Black.Visible = true
+    task.wait(3)
+    if not button then
+        button = PlayerGui:FindFirstChild("Join")
+            and PlayerGui.Join:FindFirstChild("Friends")
+            and PlayerGui.Join.Friends:FindFirstChild("Play")
+        pressIfHasConnections(button)
+    end
+    if not deviceSelect then
+        deviceSelect = PlayerGui:FindFirstChild("DeviceSelect")
+        if deviceSelect and deviceSelect:FindFirstChild("Container") then
+            local tablet = deviceSelect.Container:FindFirstChild("Tablet")
+            local tabletButton = tablet and tablet:FindFirstChild("Button")
+            pressIfHasConnections(tabletButton)
+        end
+    end
+end)
 
-        local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+-- =========================
+-- BOOST FPS (nhẹ, an toàn)
+-- =========================
+local function boostFPS()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q"))()
+    end)
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 1
+    end
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.FogStart = 9e9
+    pcall(function() settings().Rendering.QualityLevel = 1 end)
 
-        local sourceLabel = playerGui
+    pcall(function()
+        local gui = PlayerGui:FindFirstChild("MainGUI")
+        if gui and gui:FindFirstChild("Game") and gui.Game:FindFirstChild("Leaderboard") then
+            gui.Game.Leaderboard.Visible = false
+        end
+    end)
+
+    for _, v in ipairs(game:GetDescendants()) do
+        task.spawn(function()
+            if v:IsA("BasePart") then
+                v.Material = Enum.Material.Plastic
+                v.Reflectance = 0
+                v.BackSurface = Enum.SurfaceType.Smooth
+                v.BottomSurface = Enum.SurfaceType.Smooth
+                v.FrontSurface = Enum.SurfaceType.Smooth
+                v.LeftSurface = Enum.SurfaceType.Smooth
+                v.RightSurface = Enum.SurfaceType.Smooth
+                v.TopSurface = Enum.SurfaceType.Smooth
+            elseif v:IsA("Decal") then
+                if not v:IsDescendantOf(PlayerGui) then v.Transparency = 1 end
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Lifetime = NumberRange.new(0)
+            elseif v:IsA("ForceField") or v:IsA("Sparkles") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Beam") then
+                v:Destroy()
+            end
+        end)
+    end
+    for _, v in ipairs(Lighting:GetDescendants()) do
+        if v:IsA("PostEffect") then v.Enabled = false end
+    end
+end
+pcall(boostFPS)
+
+-- =========================
+-- BLACKSCREEN + HUD (Time / Total / +Count)
+-- =========================
+task.spawn(function()
+    if not (getgenv().Config and getgenv().Config.BlackScreen) then return end
+
+    local BlankScreen = PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", PlayerGui)
+    BlankScreen.Name = "Blank"
+    BlankScreen.ResetOnSpawn = false
+    BlankScreen.DisplayOrder = 10000
+    BlankScreen.IgnoreGuiInset = true
+
+    local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
+    Black.Name = "Black Screen"
+    Black.Size = UDim2.new(1, 0, 1, 0)
+    Black.BackgroundColor3 = Color3.new(0, 0, 0)
+    Black.ZIndex = 9999
+
+    local function waitSource()
+        local gui = PlayerGui
             :WaitForChild("CrossPlatform")
             :WaitForChild("Summer2025")
             :WaitForChild("Container")
@@ -116,244 +151,464 @@ task.spawn(function()
             :WaitForChild("Info")
             :WaitForChild("Tokens")
             :WaitForChild("Container")
-            :WaitForChild("TextLabel")
-
-        local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
-        screenGui.Name = "FullscreenTextDisplay"
-        screenGui.ResetOnSpawn = false
-        screenGui.IgnoreGuiInset = true
-        screenGui.DisplayOrder = 10001
-        screenGui.Parent = BlankScreen
-
-        local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel")
-        timeLabel.Name = "TimeLabel"
-        timeLabel.Size = UDim2.new(1, 0, 0.1, 0)
-        timeLabel.Position = UDim2.new(0, 0, 0.25, 0)
-        timeLabel.BackgroundTransparency = 1
-        timeLabel.TextColor3 = Color3.new(1, 1, 1)
-        timeLabel.TextStrokeTransparency = 0.5
-        timeLabel.Font = Enum.Font.GothamBold
-        timeLabel.TextScaled = true
-        timeLabel.TextWrapped = true
-        timeLabel.Text = "Time: 00:00:00" -- lúc đầu luôn là 00:00:00
-        timeLabel.Parent = screenGui
-
-        local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel")
-        middleLabel.Name = "MiddleLabel"
-        middleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-        middleLabel.Position = UDim2.new(0, 0, 0.4, 0)
-        middleLabel.BackgroundTransparency = 1
-        middleLabel.TextColor3 = Color3.new(1, 1, 1)
-        middleLabel.TextStrokeTransparency = 0.5
-        middleLabel.Font = Enum.Font.GothamBold
-        middleLabel.TextScaled = true
-        middleLabel.TextWrapped = true
-        middleLabel.Text = "Total : " .. sourceLabel.Text -- khởi tạo đúng giá trị hiện tại
-        middleLabel.Parent = screenGui
-
-        local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
-        countLabel.Name = "CountLabel"
-        countLabel.Size = UDim2.new(1, 0, 0.2, 0)
-        countLabel.Position = UDim2.new(0, 0, 0.55, 0)
-        countLabel.BackgroundTransparency = 1
-        countLabel.TextColor3 = Color3.new(1, 1, 1)
-        countLabel.TextStrokeTransparency = 0.5
-        countLabel.Font = Enum.Font.GothamBold
-        countLabel.TextScaled = true
-        countLabel.TextWrapped = true
-        countLabel.Text = "+0" -- lúc đầu luôn là +0
-        countLabel.Parent = screenGui
-
-        -- khởi tạo lastText bằng giá trị hiện tại của sourceLabel
-        local lastText = sourceLabel.Text:gsub("[%D]", "")
-
-        -- Loop kiểm tra TextLabel
-        task.spawn(function()
-            while screenGui and screenGui.Parent do
-                task.wait(0.2)
-                local currentText = sourceLabel.Text:gsub("[%D]", "")
-                if currentText ~= lastText and lastText ~= "" then -- chỉ cộng nếu lastText không rỗng
-                    local value = tonumber(currentText)
-                    if value then
-                        totalCount += 1
-                        middleLabel.Text = "Total : " .. sourceLabel.Text
-                        countLabel.Text = "+" .. totalCount
-                        if value >= 90000 then
-                            Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                        end
-                    end
-                end
-                lastText = currentText
-            end
-        end)
-
-        -- Loop cập nhật thời gian
-        task.spawn(function()
-            while screenGui and screenGui.Parent do
-                task.wait(1)
-                local elapsed = math.floor(tick() - startTime)
-                local hours = math.floor(elapsed / 3600)
-                local mins = math.floor((elapsed % 3600) / 60)
-                local secs = elapsed % 60
-                local uptime = string.format("%02d:%02d:%02d", hours, mins, secs)
-                timeLabel.Text = "Time: " .. uptime
-            end
-        end)
+        return gui:WaitForChild("TextLabel")
     end
+
+    local ok, sourceLabel = pcall(waitSource)
+    if not ok or not sourceLabel then
+        warn("[HUD] Không tìm thấy nguồn TextLabel Tokens.")
+        return
+    end
+
+    local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui")
+    screenGui.Name = "FullscreenTextDisplay"
+    screenGui.ResetOnSpawn = false
+    screenGui.IgnoreGuiInset = true
+    screenGui.DisplayOrder = 10001
+    screenGui.Parent = BlankScreen
+
+    local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel")
+    timeLabel.Name = "TimeLabel"
+    timeLabel.Size = UDim2.new(1, 0, 0.12, 0)
+    timeLabel.Position = UDim2.new(0, 0, 0.22, 0)
+    timeLabel.BackgroundTransparency = 1
+    timeLabel.TextColor3 = Color3.new(1, 1, 1)
+    timeLabel.TextStrokeTransparency = 0.5
+    timeLabel.Font = Enum.Font.GothamBold
+    timeLabel.TextScaled = true
+    timeLabel.TextWrapped = true
+    timeLabel.Text = "Time: 00:00:00"
+    timeLabel.Parent = screenGui
+
+    local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel")
+    middleLabel.Name = "MiddleLabel"
+    middleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+    middleLabel.Position = UDim2.new(0, 0, 0.4, 0)
+    middleLabel.BackgroundTransparency = 1
+    middleLabel.TextColor3 = Color3.new(1, 1, 1)
+    middleLabel.TextStrokeTransparency = 0.5
+    middleLabel.Font = Enum.Font.GothamBold
+    middleLabel.TextScaled = true
+    middleLabel.TextWrapped = true
+    middleLabel.Text = "Ball : " .. (sourceLabel.Text or "0")
+    middleLabel.Parent = screenGui
+
+    local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
+    countLabel.Name = "CountLabel"
+    countLabel.Size = UDim2.new(1, 0, 0.2, 0)
+    countLabel.Position = UDim2.new(0, 0, 0.55, 0)
+    countLabel.BackgroundTransparency = 1
+    countLabel.TextColor3 = Color3.new(1, 1, 1)
+    countLabel.TextStrokeTransparency = 0.5
+    countLabel.Font = Enum.Font.GothamBold
+    countLabel.TextScaled = true
+    countLabel.TextWrapped = true
+    countLabel.Text = "+0"
+    countLabel.Parent = screenGui
+
+    local totalCount = 0
+    local startTime = tick()
+
+    local function digits(str) return (str or ""):gsub("[%D]", "") end
+    local lastText = digits(sourceLabel.Text)
+
+    task.spawn(function()
+        while screenGui and screenGui.Parent do
+            task.wait(0.2)
+            local currentText = digits(sourceLabel.Text)
+            if currentText ~= lastText and lastText ~= "" then
+                totalCount += 1
+                middleLabel.Text = "Total : " .. sourceLabel.Text
+                countLabel.Text = "+" .. totalCount
+                local val = tonumber(currentText) or 0
+                if val >= 90000 then
+                    Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                end
+            end
+            lastText = currentText
+        end
+    end)
+
+    task.spawn(function()
+        while screenGui and screenGui.Parent do
+            task.wait(1)
+            local elapsed = math.floor(tick() - startTime)
+            local h = math.floor(elapsed / 3600)
+            local m = math.floor((elapsed % 3600) / 60)
+            local s = elapsed % 60
+            timeLabel.Text = string.format("Time: %02d:%02d:%02d", h, m, s)
+        end
+    end)
 end)
 
-LocalPlayer.CharacterAdded:Connect(function(v)
-    Character = v
-    Humanoid = v:WaitForChild("Humanoid")
-    HumanoidRootPart = v:WaitForChild("HumanoidRootPart")
-end)
-if LocalPlayer.Character then
-    Character = LocalPlayer.Character
-    Humanoid = Character:FindFirstChild("Humanoid") or Character:WaitForChild("Humanoid")
-    HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart") or Character:WaitForChild("HumanoidRootPart")
+-- =========================
+-- TP-TO-COIN (BẢO ĐẢM + AN TOÀN)
+-- =========================
+local AutofarmON, FullBag = false, false
+local CoinContainer
+local NoclipConn
+
+local function setNoclip(enabled)
+    if enabled and not NoclipConn then
+        NoclipConn = RunService.Stepped:Connect(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            for _, p in ipairs(char:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = false end
+            end
+        end)
+    elseif not enabled and NoclipConn then
+        NoclipConn:Disconnect()
+        NoclipConn = nil
+    end
 end
 
-local function Tween(targetCFrame: CFrame)
-    TweenService:Create(HumanoidRootPart, TweenInfo.new(
-        (targetCFrame.Position - HumanoidRootPart.Position).Magnitude / (getgenv().Config and getgenv().Config.Speed or 20),
-        Enum.EasingStyle.Linear
-    ), {CFrame = targetCFrame}):Play()
+local function setCollideOff(container)
+    for _, v in ipairs(container:GetDescendants()) do
+        if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+    end
 end
 
-local function getNearestCoin()
-    local nearest, nearestDist = nil, 2000
-    for _, v in next, CollectionService:GetTagged("ServerCoinPart") do
-        if v and v:IsA("BasePart") and v:GetAttribute("CoinID") ~= nil and v:GetAttribute("Collected") == nil and v:FindFirstChildWhichIsA("TouchTransmitter") then
-            local dist = (HumanoidRootPart.Position - v.Position).Magnitude
-            if dist < nearestDist then nearestDist = dist nearest = v end
+-- ====== PLATFORM AN TOÀN (dưới coin & staging trên coin) ======
+local function ensurePlatform(name, cf, size)
+    local p = workspace:FindFirstChild(name) or Instance.new("Part")
+    p.Name = name
+    p.Anchored = true
+    p.Massless = true
+    p.Transparency = 1
+    p.CanCollide = true
+    p.Size = size
+    p.CFrame = cf
+    p.Parent = workspace
+    return p
+end
+
+local function createPartSafe(target)
+    if not target or not target.Parent then return end
+    ensurePlatform("SafePart", target.CFrame * CFrame.new(0, -8, 0), Vector3.new(50, 0.5, 50))
+end
+
+local function createStagingAbove(coin)
+    if not coin or not coin.Parent then return end
+    ensurePlatform("StagePart", coin.CFrame * CFrame.new(0, 12, 0), Vector3.new(16, 1, 16))
+end
+
+-- FireTouchInterest fallback (nếu executor hỗ trợ)
+local function forceTouch(part1, part2)
+    pcall(function()
+        firetouchinterest(part1, part2, 0)
+        task.wait()
+        firetouchinterest(part1, part2, 1)
+    end)
+end
+
+-- ====== Anti-void watchdog: lưu CFrame an toàn & hồi khi rơi ======
+local lastSafeCFrame = nil
+local function groundRay(pos, depth)
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {LocalPlayer.Character}
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    return workspace:Raycast(pos + Vector3.new(0,3,0), Vector3.new(0, -(depth or 120), 0), params)
+end
+
+RunService.Heartbeat:Connect(function()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    if groundRay(hrp.Position, 120) then
+        lastSafeCFrame = hrp.CFrame
+    end
+    if hrp.Position.Y < -200 and lastSafeCFrame then
+        hrp.CFrame = lastSafeCFrame
+        if hrp.AssemblyLinearVelocity then
+            hrp.AssemblyLinearVelocity = Vector3.new()
+            hrp.AssemblyAngularVelocity = Vector3.new()
         end
     end
-    return nearest
+end)
+
+-- ====== TP ANTOÀN (chống kick Invalid position)
+local MAX_STEP_STUDS = 8 -- quãng đường tối đa mỗi bước TP (giữ hợp lệ)
+local HOVER_Y        = 3  -- bay lơ lửng trên coin trước khi hạ
+local LAND_OFFSET_Y  = 0.9
+
+local function microTP(hrp: BasePart, fromCF: CFrame, toCF: CFrame)
+    local start = fromCF
+    local target = toCF
+    local dist = (target.Position - start.Position).Magnitude
+    local steps = math.max(2, math.ceil(dist / MAX_STEP_STUDS))
+    for i = 1, steps do
+        local cf = start:Lerp(target, i/steps)
+
+        -- nếu không có ground phía dưới -> nâng nhẹ để tránh vị trí không hợp lệ
+        if not groundRay(cf.Position, 200) then
+            cf = cf + Vector3.new(0, 1.5, 0)
+        end
+
+        hrp.CFrame = cf
+        RunService.Heartbeat:Wait()
+        if i % 3 == 0 then
+            pcall(function()
+                hrp.AssemblyLinearVelocity = Vector3.new()
+                hrp.AssemblyAngularVelocity = Vector3.new()
+            end)
+        end
+    end
 end
 
+-- TP (mượt, vi-bước, tránh bị kick)
+local function tpToCoin(coin)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not (hrp and coin and coin.Parent) then return false end
+
+    setNoclip(true)
+
+    pcall(function()
+        hrp.AssemblyLinearVelocity = Vector3.new()
+        hrp.AssemblyAngularVelocity = Vector3.new()
+    end)
+
+    -- Sàn an toàn dưới coin
+    createPartSafe(coin)
+
+    -- Bước 1: tới điểm lơ lửng trên coin (giảm chuyển động ngang “đột ngột”)
+    local hoverCF  = coin.CFrame * CFrame.new(0, HOVER_Y, 0)
+    microTP(hrp, hrp.CFrame, hoverCF)
+
+    if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
+
+    -- Bước 2: hạ thẳng đứng xuống ngay tâm coin (đặt thấp 1 chút để bám sàn)
+    local landCF = coin.CFrame * CFrame.new(0, LAND_OFFSET_Y, 0)
+    microTP(hrp, hoverCF, landCF)
+    hrp.CFrame = landCF
+
+    -- Chạm coin nhanh
+    local t0 = os.clock()
+    while os.clock() - t0 < 0.6 do
+        if not coin.Parent then break end
+        if not coin:FindFirstChild("TouchInterest") then break end
+        forceTouch(hrp, coin)
+        task.wait(0.02)
+    end
+
+    pcall(function()
+        hrp.AssemblyLinearVelocity = Vector3.new()
+        hrp.AssemblyAngularVelocity = Vector3.new()
+    end)
+
+    if hum then hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics) end
+
+    if groundRay(hrp.Position, 120) then
+        lastSafeCFrame = hrp.CFrame
+    end
+    return true
+end
+
+-- Cache container
+local function findCoinContainer()
+    if CoinContainer and CoinContainer.Parent then return CoinContainer end
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if (v:IsA("Model") and v.Name == "CoinContainer") or (v:IsA("Part") and v.Name == "Coin_Server" and v.Parent) then
+            CoinContainer = v:IsA("Model") and v or v.Parent
+            return CoinContainer
+        end
+    end
+    return nil
+end
+
+-- ====== NEAREST-SAFE SELECTOR ======
+local MAX_DIST, MAX_Y = 80, 30
+local GROUND_DEPTH = 65
+local TP_DELAY = 0.2
+
+local function hasGroundBelow(pos)
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    local res = workspace:Raycast(pos + Vector3.new(0, 5, 0), Vector3.new(0, -GROUND_DEPTH, 0), rayParams)
+    return res ~= nil
+end
+
+local function isEdgeCoin(pos)
+    local offsets = {
+        Vector3.new(6, 0, 0), Vector3.new(-6, 0, 0),
+        Vector3.new(0, 0, 6), Vector3.new(0, 0, -6),
+    }
+    local ok = 0
+    for _,off in ipairs(offsets) do
+        if hasGroundBelow(pos + off) then ok += 1 end
+    end
+    return ok < 2
+end
+
+-- >>> chọn coin NGẪU NHIÊN trong NHÓM gần nhất
+local function findRandomNearestSafeCoin(container)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    local candidates, dmin = {}, math.huge
+    for _, v in ipairs(container:GetChildren()) do
+        if v:IsA("BasePart") and v:FindFirstChild("TouchInterest") then
+            local d = (hrp.Position - v.Position).Magnitude
+            local dy = math.abs(hrp.Position.Y - v.Position.Y)
+            if d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) and not isEdgeCoin(v.Position) then
+                if d < dmin then dmin = d end
+                table.insert(candidates, {part = v, dist = d})
+            end
+        end
+    end
+    if #candidates == 0 then return nil end
+
+    local window = 8
+    local pool = {}
+    for _, item in ipairs(candidates) do
+        if item.dist <= dmin + window then
+            table.insert(pool, item.part)
+        end
+    end
+    if #pool == 0 then return nil end
+    return pool[math.random(1, #pool)]
+end
+
+-- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall) + xử lý FullBag
 task.spawn(function()
-    xpcall(function()
-        while task.wait(0.2) do
-            if LocalPlayer.PlayerGui.MainGUI.Game:FindFirstChild("EarnedXP") and LocalPlayer.PlayerGui.MainGUI.Game.EarnedXP.Visible then
-                local v = getNearestCoin()
-                if v then
-                    repeat task.wait(0.2)
-                        if (v.Position - HumanoidRootPart.Position).Magnitude <= 15 then
-                            Character:SetPrimaryPartCFrame(v.CFrame)
-                        else
-                            Tween(v.CFrame)
-                        end
-                    until not v:IsDescendantOf(workspace) or not v:FindFirstChildWhichIsA("TouchTransmitter") or v:GetAttribute("Collected") ~= nil
-                end
-            end
+    while task.wait(1) do
+        local ok, vis = pcall(function()
+            return PlayerGui.MainGUI.Game.CoinBags.Container.BeachBall.Visible
+        end)
+        if not ok or not vis then
+            FullBag = false
         end
-    end, function(e) warn("ERROR: ".. e)end)
+
+        AutofarmON = ok and vis and (not FullBag) or false
+
+        if FullBag then
+            setNoclip(false)
+        else
+            setNoclip(AutofarmON)
+        end
+    end
 end)
 
-setfpscap(getgenv().Config and getgenv().Config.FPS or 0)
+-- Vòng farm chính: chọn coin ngẫu nhiên trong nhóm gần nhất
+task.spawn(function()
+    LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
+    if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
-local module = {}
-function module.boostFPS()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q'))()
-    local Terrain = workspace:FindFirstChildOfClass('Terrain')
-    Terrain.WaterWaveSize = 0
-    Terrain.WaterWaveSpeed = 0
-    Terrain.WaterReflectance = 0
-    Terrain.WaterTransparency = 1
-    Lighting.GlobalShadows = false
-    Lighting.FogEnd = 9e9
-    Lighting.FogStart = 9e9
-    settings().Rendering.QualityLevel = 1 :: any
-end
+    while task.wait(TP_DELAY) do
+        if not AutofarmON then continue end
+        local container = findCoinContainer()
+        if not container then continue end
+        pcall(setCollideOff, container)
 
--- function module.checkAlt()
---     local count = 0
---     local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fedtfuyu/fedscript/refs/heads/main/fedscripts"))()
---     for _, v in Players:GetChildren() do
---         if table.find(listAlt, v.Name) then
---             count = count + 1
---         end
---     end
---     return count
--- end
+        local coin = findRandomNearestSafeCoin(container)
+        if not coin then
+            local old = MAX_DIST; MAX_DIST = 95
+            coin = findRandomNearestSafeCoin(container)
+            MAX_DIST = old
+        end
+        if not coin then continue end
 
--- local status = module.checkAlt()
--- if status > 4 then
---     TeleportService:Teleport(game.PlaceId, LocalPlayer)
--- end
+        pcall(function()
+            tpToCoin(coin)
+        end)
+    end
+end)
 
-spawn(function()
-    local DataPlayer = require(ReplicatedStorage.Modules.ProfileData)
-    local currentCoin = DataPlayer.Materials.Owned.BeachBalls2025
+-- =========================
+-- ANTI-STUCK (coin không tăng -> rejoin)
+-- =========================
+task.spawn(function()
+    local ok, DataPlayer = pcall(function()
+        return require(ReplicatedStorage.Modules.ProfileData)
+    end)
+    if not ok or not DataPlayer then return end
+
+    local last = tonumber(DataPlayer.Materials.Owned.BeachBalls2025) or 0
     while task.wait(300) do
         pcall(function()
-            if DataPlayer.Materials.Owned.BeachBalls2025 > currentCoin then
-                currentCoin = DataPlayer.Materials.Owned.BeachBalls2025
-            elseif DataPlayer.Materials.Owned.BeachBalls2025 == currentCoin then
-                Players:Kick('Server Error')
-                TeleportService.TeleportService:Teleport(game.PlaceId, Players)
+            local cur = tonumber(DataPlayer.Materials.Owned.BeachBalls2025) or 0
+            if cur > last then
+                last = cur
+            else
+                LocalPlayer:Kick("Server Error")
+                TeleportService:Teleport(game.PlaceId, LocalPlayer)
             end
         end)
     end
 end)
 
-
-
-game:GetService("GuiService").ErrorMessageChanged:Connect(newcclosure(function()
-    if game:GetService("GuiService"):GetErrorType() == Enum.ConnectionError.DisconnectErrors and not ({[9] = 1, [10] = 1, [13] = 1, [17] = 1, [18] = 1, [21] = 1, [26] = 1})[game:GetService("GuiService"):GetErrorCode()] then
-        while true do TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) task.wait(3) end
-    end
-end))
-
-
--- StarterPlayer > StarterPlayerScripts > LocalScript
-
-local TeleportService = game:GetService("TeleportService")
-local localPlayer = Players.LocalPlayer
+-- =========================
+-- REJOIN thông minh (ít người / disconnect) - MIN_PLAYERS hardcoded = 4
+-- =========================
 local retry = 0
 local isTeleporting = false
-local MIN_PLAYERS = 4 -- nếu ít hơn số này thì sẽ rejoin
+local lastRejoinAt = 0
 
--- Hàm rejoin
 local function rejoin()
-	if RunService:IsStudio() then return end -- tránh chạy trong Studio
-	if isTeleporting then return end -- tránh spam teleport
-
-	isTeleporting = true
-	local ok, err = pcall(function()
-		TeleportService:Teleport(game.PlaceId, localPlayer)
-	end)
-
-	if not ok then
-		warn("Teleport failed:", err)
-		if retry < 3 then
-			retry += 1
-			task.wait(5)
-			isTeleporting = false
-			rejoin()
-		else
-			warn("Rejoin failed sau 3 lần thử.")
-		end
-	end
+    if isTeleporting then return end
+    isTeleporting = true
+    local ok, err = pcall(function()
+        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+    end)
+    if not ok then
+        warn("Teleport failed:", err)
+        if retry < 3 then
+            retry += 1
+            task.wait(5)
+            isTeleporting = false
+            rejoin()
+        else
+            warn("Rejoin failed sau 3 lần thử.")
+        end
+    end
 end
 
--- Hàm kiểm tra số người
-local function checkAndRejoin()
-	if #Players:GetPlayers() < MIN_PLAYERS then
-		rejoin()
-	end
+local function checkAndRejoinByPlayers()
+    local MIN_PLAYERS = 4
+    if os.clock() - lastRejoinAt < 20 then return end
+    if #Players:GetPlayers() < MIN_PLAYERS then
+        lastRejoinAt = os.clock()
+        rejoin()
+    end
 end
-task.delay(3, checkAndRejoin)
+
+task.delay(3, checkAndRejoinByPlayers)
 Players.PlayerRemoving:Connect(function(p)
-	if p ~= localPlayer then
-		task.delay(1, checkAndRejoin)
-	end
+    if p ~= LocalPlayer then task.delay(1, checkAndRejoinByPlayers) end
 end)
-
 task.spawn(function()
-	while task.wait(20) do
-		checkAndRejoin()
-	end
+    while task.wait(20) do checkAndRejoinByPlayers() end
 end)
 
+TeleportService.TeleportInitFailed:Connect(function(_, teleportResult, errorMessage)
+    warn("TeleportInitFailed:", teleportResult, errorMessage)
+    task.spawn(function()
+        for _ = 1, 5 do
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+            task.wait(3)
+        end
+    end)
+end)
 
+-- =========================
+-- ALT CHECK (BỎ THEO YÊU CẦU) - COMMENT
+-- =========================
+--[[
+local function checkAlt()
+    local count = 0
+    local listAlt = loadstring(game:HttpGet("https://raw.githubusercontent.com/Fedtfuyu/fedscript/refs/heads/main/fedscripts"))()
+    for _, v in ipairs(Players:GetChildren()) do
+        if table.find(listAlt, v.Name) then count += 1 end
+    end
+    return count
+end
+
+-- local status = checkAlt()
+-- if status > 4 then TeleportService:Teleport(game.PlaceId, LocalPlayer) end
+]]--
+
+pcall(function() setfpscap(getgenv().Config.FPS or 0) end)
