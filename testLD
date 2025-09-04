@@ -199,7 +199,7 @@ task.spawn(function()
     middleLabel.Font = Enum.Font.GothamBold
     middleLabel.TextScaled = true
     middleLabel.TextWrapped = true
-    middleLabel.Text = "Test : " .. (sourceLabel.Text or "0")
+    middleLabel.Text = "Test 1 : " .. (sourceLabel.Text or "0")
     middleLabel.Parent = screenGui
 
     local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
@@ -251,7 +251,7 @@ task.spawn(function()
 end)
 
 -- =========================
--- TP-TO-COIN (BẢO ĐẢM + AN TOÀN)
+-- TP-TO-COIN (BẢO ĐẢM + AN TOÀN + FULLBAG DỪNG)
 -- =========================
 local AutofarmON, FullBag = false, false
 local CoinContainer
@@ -301,7 +301,7 @@ local function forceTouch(part1, part2)
     end)
 end
 
--- TP (CFrame vào coin + đợi TouchInterest mất)
+-- TP (CFrame vào coin + đợi TouchInterest mất) - giảm rủi ro rớt map
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -311,11 +311,11 @@ local function tpToCoin(coin)
     setNoclip(true)
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
 
-    -- Giảm rủi ro rớt: đặt trên coin cao hơn 2 -> 2.5
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 2.5, 0)
+    -- cao hơn 1 chút để hạn chế kẹt/rơi
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 2.6, 0)
 
     local t0 = os.clock()
-    while os.clock() - t0 < 1.0 do -- rút ngắn đợi để bớt spam
+    while os.clock() - t0 < 0.95 do
         if not coin.Parent or not coin:FindFirstChild("TouchInterest") then break end
         forceTouch(hrp, coin)
         task.wait(0.03)
@@ -338,8 +338,7 @@ local function findCoinContainer()
 end
 
 -- ====== NEAREST-SAFE SELECTOR ======
-local MAX_DIST, MAX_Y = 70, 30  -- giảm khoảng cách và chênh lệch Y cho an toàn hơn
-
+local MAX_DIST, MAX_Y = 60, 28  -- giảm thêm cho an toàn/giả lập
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
     rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
@@ -365,16 +364,35 @@ local function findNearestSafeCoin(container)
     return nearest
 end
 
--- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall) nếu có
+-- Điều chỉnh FPS khi Idle/FullBag để tiết kiệm tài nguyên
+local lastFPS = getgenv().Config.FPS or 3
+local function setFPSCapSafe(val)
+    pcall(function()
+        if val ~= lastFPS then
+            setfpscap(val)
+            lastFPS = val
+        end
+    end)
+end
+
+-- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall). Khi full bag -> đứng im
 task.spawn(function()
     while task.wait(0.8) do
         local ok, vis = pcall(function()
             return PlayerGui.MainGUI.Game.CoinBags.Container.BeachBall.Visible
         end)
-        -- Khi túi full thường UI túi ẩn đi => đứng im
+
+        -- Nếu UI túi mất/ẩn => coi như FullBag
         FullBag = ok and (vis == false) or false
         AutofarmON = ok and vis and (not FullBag) or false
-        setNoclip(AutofarmON and not FullBag)
+
+        if FullBag then
+            setNoclip(false)
+            setFPSCapSafe(2)   -- tiết kiệm CPU/RAM khi full
+        else
+            setNoclip(AutofarmON)
+            setFPSCapSafe(getgenv().Config.FPS or 3)
+        end
     end
 end)
 
@@ -384,7 +402,7 @@ task.spawn(function()
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
     local noCoinCount = 0
-    while task.wait(0.33) do -- pacing chậm hơn cho an toàn
+    while task.wait(0.36) do -- pacing chậm thêm 1 nấc cho an toàn/giả lập
         if FullBag then continue end
         if not AutofarmON then continue end
 
@@ -394,12 +412,12 @@ task.spawn(function()
 
         local coin = findNearestSafeCoin(container)
         if not coin then
-            noCoinCount = noCoinCount + 1
+            noCoinCount += 1
             if noCoinCount >= 10 then
-                -- Không tìm thấy coin liên tiếp -> đứng im tạm để an toàn (tránh 267)
+                -- Không thấy coin liên tiếp -> nghỉ tạm, giảm khả năng 267
                 for i=1,25 do
                     if FullBag then break end
-                    task.wait(0.2)
+                    task.wait(0.22)
                 end
                 noCoinCount = 0
             end
@@ -410,11 +428,11 @@ task.spawn(function()
 
         pcall(function()
             createPartSafe(coin)
-            task.wait(0.05)            -- đảm bảo sàn đã tạo
+            task.wait(0.05)
             tpToCoin(coin)
         end)
 
-        task.wait(0.32)               -- nghỉ thêm, không spam TP
+        task.wait(0.34)
     end
 end)
 
