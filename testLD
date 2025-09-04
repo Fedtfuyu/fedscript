@@ -1,20 +1,7 @@
---[[
-    FED - Merged Autofarm Script (Fast Teleport + BlackScreen HUD + Strong FPS Boost + Smart Rejoin)
-    Yêu cầu của bạn:
-      - Không check alt (đặt trong comment)
-      - AutoFarm nhanh như script trên (teleport thẳng vào coin)
-      - Giữ BlackScreen + Time + Total + +Count
-      - Boost FPS mạnh
-      - Rejoin thông minh (disconnect / server ít người)
-
-    Lưu ý:
-      - Script viết kèm comment tiếng Việt.
-      - Một số API/exploit (cloneref, getconnections, request, setfpscap, etc.) yêu cầu executor hỗ trợ.
-]]--
 
 getgenv().Config = {
-    FPS = 3;            -- FPS cap sau khi setup xong
-    Speed = 30;          -- (giá trị tham khảo; dùng cho Tween nếu cần)
+    FPS = 3;             -- FPS cap sau khi setup xong (0 = không giới hạn)
+    Speed = 30;          -- (dự phòng cho tween nếu cần)
     BlackScreen = true;  -- Bật overlay đen + HUD
     MIN_PLAYERS = 4;     -- Nếu server ít hơn số này => tự rejoin
     WEBHOOK_URL = "";
@@ -46,11 +33,15 @@ local StarterGui         = Services.StarterGui
 local CoreGui            = Services.CoreGui
 
 local LocalPlayer = Players.LocalPlayer
-
 repeat task.wait(0.5) until game:IsLoaded() and LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Giảm nguy cơ rơi map (dùng âm vô cùng thay vì NaN)
+workspace.FallenPartsDestroyHeight = -math.huge
 
+-- =========================
+-- AUTO CLICK UI "PLAY" / "DEVICE" (nếu có)
+-- =========================
 local function pressIfHasConnections(buttonObj)
     if not buttonObj then return end
     for _, v in ipairs(getconnections(buttonObj.MouseButton1Click)) do
@@ -83,14 +74,13 @@ task.spawn(function()
 
     task.wait(3)
 
-    -- Thử lại 1 lần nữa sau 3s nếu chưa có
+    -- Thử lại 1 lần nữa
     if not button then
         button = PlayerGui:FindFirstChild("Join")
             and PlayerGui.Join:FindFirstChild("Friends")
             and PlayerGui.Join.Friends:FindFirstChild("Play")
         pressIfHasConnections(button)
     end
-
     if not deviceSelect then
         deviceSelect = PlayerGui:FindFirstChild("DeviceSelect")
         if deviceSelect and deviceSelect:FindFirstChild("Container") then
@@ -100,6 +90,104 @@ task.spawn(function()
         end
     end
 end)
+
+-- =========================
+-- BOOST FPS (chạy sớm để UI mượt)
+-- =========================
+local function boostFPS()
+    -- Optional: loader ngoài, có thể bỏ nếu không muốn
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q"))()
+    end)
+
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 1
+    end
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.FogStart = 9e9
+    pcall(function() settings().Rendering.QualityLevel = 1 end)
+
+    -- Ẩn UI nặng nếu có
+    pcall(function()
+        local gui = PlayerGui:FindFirstChild("MainGUI")
+        if gui and gui:FindFirstChild("Game") and gui.Game:FindFirstChild("Leaderboard") then
+            gui.Game.Leaderboard.Visible = false
+        end
+    end)
+
+    -- Giảm chất liệu/hiệu ứng (an toàn hơn: không xóa AnimationController)
+    for _, v in ipairs(game:GetDescendants()) do
+        task.spawn(function()
+            if v:IsA("BasePart") then
+                v.Material = Enum.Material.Plastic
+                v.Reflectance = 0
+                -- "SmoothNoOutlines" đã lỗi thời -> dùng Smooth
+                v.BackSurface = Enum.SurfaceType.Smooth
+                v.BottomSurface = Enum.SurfaceType.Smooth
+                v.FrontSurface = Enum.SurfaceType.Smooth
+                v.LeftSurface = Enum.SurfaceType.Smooth
+                v.RightSurface = Enum.SurfaceType.Smooth
+                v.TopSurface = Enum.SurfaceType.Smooth
+            elseif v:IsA("Decal") then
+                if not v:IsDescendantOf(PlayerGui) then
+                    v.Transparency = 1
+                end
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Lifetime = NumberRange.new(0)
+            elseif v:IsA("ForceField") or v:IsA("Sparkles") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Beam") then
+                v:Destroy()
+            end
+        end)
+    end
+
+    for _, v in ipairs(Lighting:GetDescendants()) do
+        if v:IsA("PostEffect") then v.Enabled = false end
+    end
+
+    -- Xoá phụ kiện mới spawn
+    Players.PlayerAdded:Connect(function(plr)
+        plr.CharacterAdded:Connect(function(char)
+            task.wait(0.5)
+            for _, part in ipairs(char:GetChildren()) do
+                if part:IsA("Accessory") or part.Name == "Radio" then
+                    part:Destroy()
+                end
+            end
+        end)
+    end)
+
+    -- Khi có phần tử mới
+    workspace.DescendantAdded:Connect(function(child)
+        task.spawn(function()
+            if child:IsA("ForceField") or child:IsA("Sparkles") or child:IsA("Smoke") or child:IsA("Fire") or child:IsA("Beam") then
+                RunService.Heartbeat:Wait()
+                child:Destroy()
+            end
+            if child:IsA("BasePart") then
+                child.Material = Enum.Material.Plastic
+                child.Reflectance = 0
+                child.BackSurface = Enum.SurfaceType.Smooth
+                child.BottomSurface = Enum.SurfaceType.Smooth
+                child.FrontSurface = Enum.SurfaceType.Smooth
+                child.LeftSurface = Enum.SurfaceType.Smooth
+                child.RightSurface = Enum.SurfaceType.Smooth
+                child.TopSurface = Enum.SurfaceType.Smooth
+            elseif child:IsA("Decal") then
+                if not child:IsDescendantOf(PlayerGui) then
+                    child.Transparency = 1
+                end
+            elseif child:IsA("ParticleEmitter") or child:IsA("Trail") then
+                child.Lifetime = NumberRange.new(0)
+            end
+        end)
+    end)
+end
+pcall(boostFPS)
 
 -- =========================
 -- BLACKSCREEN + HUD (Time / Total / +Count)
@@ -232,106 +320,27 @@ task.spawn(function()
 end)
 
 -- =========================
--- FPS BOOST MẠNH
--- =========================
-local function boostFPS()
-    -- Optional: loader ngoài, có thể bỏ nếu không muốn
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q"))()
-    end)
-
-    local Terrain = workspace:FindFirstChildOfClass("Terrain")
-    if Terrain then
-        Terrain.WaterWaveSize = 0
-        Terrain.WaterWaveSpeed = 0
-        Terrain.WaterReflectance = 0
-        Terrain.WaterTransparency = 1
-    end
-
-    Lighting.GlobalShadows = false
-    Lighting.FogEnd = 9e9
-    Lighting.FogStart = 9e9
-    pcall(function() settings().Rendering.QualityLevel = 1 end)
-
-    -- Ẩn UI nặng nếu có
-    pcall(function()
-        local gui = PlayerGui:FindFirstChild("MainGUI")
-        if gui and gui:FindFirstChild("Game") and gui.Game:FindFirstChild("Leaderboard") then
-            gui.Game.Leaderboard.Visible = false
-        end
-    end)
-
-    -- Giảm chất liệu/hiệu ứng
-    for _, v in ipairs(game:GetDescendants()) do
-        task.spawn(function()
-            if v:IsA("BasePart") then
-                v.Material = Enum.Material.Plastic
-                v.Reflectance = 0
-                v.Transparency = v.Transparency -- giữ nguyên, không bắt buộc 1 để tránh tàng hình map
-                v.BackSurface = Enum.SurfaceType.SmoothNoOutlines
-                v.BottomSurface = Enum.SurfaceType.SmoothNoOutlines
-                v.FrontSurface = Enum.SurfaceType.SmoothNoOutlines
-                v.LeftSurface = Enum.SurfaceType.SmoothNoOutlines
-                v.RightSurface = Enum.SurfaceType.SmoothNoOutlines
-                v.TopSurface = Enum.SurfaceType.SmoothNoOutlines
-            elseif v:IsA("Decal") then
-                v.Transparency = 1
-            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Lifetime = NumberRange.new(0)
-            elseif v:IsA("AnimationController") then
-                v:Destroy()
-            end
-        end)
-    end
-
-    for _, v in ipairs(Lighting:GetDescendants()) do
-        if v:IsA("PostEffect") then v.Enabled = false end
-    end
-
-    -- Xoá phụ kiện mới spawn
-    Players.PlayerAdded:Connect(function(plr)
-        plr.CharacterAdded:Connect(function(char)
-            task.wait(0.5)
-            for _, part in ipairs(char:GetChildren()) do
-                if part:IsA("Accessory") or part.Name == "Radio" then
-                    part:Destroy()
-                end
-            end
-        end)
-    end)
-
-    -- Khi có phần tử mới
-    workspace.DescendantAdded:Connect(function(child)
-        task.spawn(function()
-            if child:IsA("ForceField") or child:IsA("Sparkles") or child:IsA("Smoke") or child:IsA("Fire") or child:IsA("Beam") then
-                RunService.Heartbeat:Wait()
-                child:Destroy()
-            end
-            if child:IsA("BasePart") then
-                child.Material = Enum.Material.Plastic
-                child.Reflectance = 0
-                child.BackSurface = Enum.SurfaceType.SmoothNoOutlines
-                child.BottomSurface = Enum.SurfaceType.SmoothNoOutlines
-                child.FrontSurface = Enum.SurfaceType.SmoothNoOutlines
-                child.LeftSurface = Enum.SurfaceType.SmoothNoOutlines
-                child.RightSurface = Enum.SurfaceType.SmoothNoOutlines
-                child.TopSurface = Enum.SurfaceType.SmoothNoOutlines
-            elseif child:IsA("Decal") then
-                child.Transparency = 1
-            elseif child:IsA("ParticleEmitter") or child:IsA("Trail") then
-                child.Lifetime = NumberRange.new(0)
-            elseif child:IsA("AnimationController") then
-                child:Destroy()
-            end
-        end)
-    end)
-end
-
--- =========================
 -- AUTOFARM NHANH (TP THẲNG VÀO COIN)
 -- =========================
 local AutofarmON = false
 local FullBag = false
+local NoclipConn
+
+-- Helper: bật/tắt noclip cho nhân vật (đảm bảo TP không bị kẹt)
+local function setNoclip(enabled)
+    if enabled and not NoclipConn then
+        NoclipConn = RunService.Stepped:Connect(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            for _, p in ipairs(char:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = false end
+            end
+        end)
+    elseif not enabled and NoclipConn then
+        NoclipConn:Disconnect()
+        NoclipConn = nil
+    end
+end
 
 -- Helper: tắt collide các part xung quanh coin container
 local function setCollideOff(container)
@@ -346,7 +355,6 @@ end
 local function createPartSafe(target)
     local existing = workspace:FindFirstChild("SafePart")
     if existing then existing:Destroy() end
-
     local p = Instance.new("Part")
     p.Size = Vector3.new(50, 0.5, 50)
     p.CFrame = target.CFrame * CFrame.new(0, -8, 0)
@@ -355,35 +363,49 @@ local function createPartSafe(target)
     p.Anchored = true
     p.Massless = true
     p.Transparency = 1
+    p.CanCollide = true
 end
 
--- Helper: TP nhân vật vào coin
+-- Helper: TP nhân vật vào coin (BẢO ĐẢM ĐI THẲNG VÀO COIN)
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if hrp and coin then
-        hrp.CFrame = coin.CFrame * CFrame.new(0, 2, 0)
-        -- chờ TouchInterest mất để đảm bảo đã ăn
-        local t0 = os.clock()
-        repeat task.wait() until not coin:FindFirstChild("TouchInterest") or (os.clock() - t0) > 1.5
-        return true
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not (hrp and coin and coin.Parent) then return false end
+
+    -- Bật noclip + đứng vững
+    setNoclip(true)
+    if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end -- tránh animation cản trở
+
+    -- Teleport thẳng vào tâm coin (offset 2 studs trên)
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 2, 0)
+
+    -- Chờ coin biến mất (ăn xong) hoặc timeout 1.5s
+    local t0 = os.clock()
+    while os.clock() - t0 < 1.5 do
+        if not coin.Parent or not coin:FindFirstChild("TouchInterest") then break end
+        task.wait()
     end
-    return false
+
+    -- Tắt physics về mặc định
+    if hum then hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics) end
+    return true
 end
 
--- Tìm container chứa coin
+-- Cache container để tránh quét liên tục
+local CoinContainer
 local function findCoinContainer()
+    if CoinContainer and CoinContainer.Parent then return CoinContainer end
     for _, v in ipairs(workspace:GetDescendants()) do
-        if v:IsA("Model") and v.Name == "CoinContainer" then
-            return v
-        elseif v:IsA("Part") and v.Name == "Coin_Server" and v.Parent then
-            return v.Parent
+        if (v:IsA("Model") and v.Name == "CoinContainer") or (v:IsA("Part") and v.Name == "Coin_Server" and v.Parent) then
+            CoinContainer = v:IsA("Model") and v or v.Parent
+            return CoinContainer
         end
     end
     return nil
 end
 
--- Tìm coin gần nhất (<= 50 studs) để chain TP nhanh
+-- Tìm coin gần nhất (<= 60 studs) để chain TP nhanh
 local function findNearestCoin(container)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -396,7 +418,7 @@ local function findNearestCoin(container)
             if d < dm then dm = d; nearest = v end
         end
     end
-    if dm <= 50 then return nearest end
+    if dm <= 60 then return nearest end
     return nil
 end
 
@@ -407,22 +429,17 @@ task.spawn(function()
             return PlayerGui.MainGUI.Game.CoinBags.Container.BeachBall.Visible
         end)
         AutofarmON = ok and vis and (not FullBag) or false
+        setNoclip(AutofarmON)
     end
 end)
 
 -- Vòng farm chính
 task.spawn(function()
-    -- Optional: boost FPS
-    pcall(boostFPS)
-
     -- Chờ nhân vật sẵn sàng
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
-    while task.wait(0.25) do
-        -- Ngăn rơi map
-        workspace.FallenPartsDestroyHeight = (0/0)
-
+    while task.wait(0.2) do
         if not AutofarmON then continue end
 
         local container = findCoinContainer()
@@ -430,33 +447,30 @@ task.spawn(function()
 
         pcall(setCollideOff, container)
 
-        while task.wait() do
-            if not container or not AutofarmON then break end
+        -- Chọn coin ngẫu nhiên + chain coin gần
+        local list = container:GetChildren()
+        if #list > 0 then
+            local pick = list[math.random(1, #list)]
+            if pick and pick:FindFirstChild("TouchInterest") then
+                pcall(function()
+                    createPartSafe(pick)
+                    task.wait()
+                    tpToCoin(pick)
 
-            local list = container:GetChildren()
-            if #list > 0 then
-                local pick = list[math.random(1, #list)]
-                if pick:FindFirstChild("TouchInterest") then
-                    pcall(function()
-                        createPartSafe(pick)
+                    -- Chain nhặt thêm 4 coin gần nhất (nếu có)
+                    local count = 0
+                    while task.wait(0.25) do
+                        if count >= 4 then break end
+                        local near = findNearestCoin(container)
+                        if not near then break end
+                        createPartSafe(near)
                         task.wait()
-                        tpToCoin(pick)
+                        tpToCoin(near)
+                        count += 1
+                    end
 
-                        -- Chain nhặt thêm 4 coin gần nhất (nếu có)
-                        local count = 0
-                        while task.wait(0.35) do
-                            if count >= 4 then break end
-                            local near = findNearestCoin(container)
-                            if not near then break end
-                            createPartSafe(near)
-                            task.wait()
-                            tpToCoin(near)
-                            count += 1
-                        end
-
-                        task.wait(0.8)
-                    end)
-                end
+                    task.wait(0.5)
+                end)
             end
         end
     end
@@ -471,10 +485,10 @@ task.spawn(function()
     end)
     if not ok or not DataPlayer then return end
 
-    local last = DataPlayer.Materials.Owned.BeachBalls2025
+    local last = tonumber(DataPlayer.Materials.Owned.BeachBalls2025) or 0
     while task.wait(300) do
         pcall(function()
-            local cur = DataPlayer.Materials.Owned.BeachBalls2025
+            local cur = tonumber(DataPlayer.Materials.Owned.BeachBalls2025) or 0
             if cur > last then
                 last = cur
             else
@@ -491,6 +505,8 @@ end)
 -- =========================
 local retry = 0
 local isTeleporting = false
+local lastRejoinAt = 0
+
 local function rejoin()
     if isTeleporting then return end
     isTeleporting = true
@@ -511,7 +527,9 @@ local function rejoin()
 end
 
 local function checkAndRejoinByPlayers()
+    if os.clock() - lastRejoinAt < 20 then return end
     if #Players:GetPlayers() < (getgenv().Config.MIN_PLAYERS or 4) then
+        lastRejoinAt = os.clock()
         rejoin()
     end
 end
@@ -528,14 +546,16 @@ task.spawn(function()
     end
 end)
 
-GuiService.ErrorMessageChanged:Connect(newcclosure(function()
-    if GuiService:GetErrorType() == Enum.ConnectionError.DisconnectErrors then
-        while true do
+-- Hook lỗi teleport/init failed (ổn định hơn ErrorMessageChanged)
+TeleportService.TeleportInitFailed:Connect(function(_, teleportResult, errorMessage)
+    warn("TeleportInitFailed:", teleportResult, errorMessage)
+    task.spawn(function()
+        for _ = 1, 5 do
             TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
             task.wait(3)
         end
-    end
-end))
+    end)
+end)
 
 -- =========================
 -- ALT CHECK (BỎ THEO YÊU CẦU) - ĐỂ TRONG COMMENT
@@ -558,4 +578,5 @@ end
 -- end
 ]]--
 
+-- Cuối cùng: hạ FPS theo config (nếu executor hỗ trợ)
 pcall(function() setfpscap(getgenv().Config.FPS or 0) end)
