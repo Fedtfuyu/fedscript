@@ -298,8 +298,7 @@ end
 
 local function createStagingAbove(coin)
     if not coin or not coin.Parent then return end
-    -- Giảm độ cao staging: +12 -> +6 (TP thấp hơn)
-    ensurePlatform("StagePart", coin.CFrame * CFrame.new(0, 6, 0), Vector3.new(16, 1, 16))
+    ensurePlatform("StagePart", coin.CFrame * CFrame.new(0, 12, 0), Vector3.new(16, 1, 16))
 end
 
 -- FireTouchInterest fallback (nếu executor hỗ trợ)
@@ -351,24 +350,35 @@ local function tpToCoin(coin)
         hrp.AssemblyAngularVelocity = Vector3.new()
     end)
 
-    -- Bước 1: staging phía trên coin (đã hạ còn +6)
+    -- Bước 1: staging phía trên coin
     createStagingAbove(coin)
     task.wait(0.02)
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 6, 0)
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 10, 0) -- GIẢM cao hơn trước 1 xíu (12 -> 10)
     task.wait(0.05)
 
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
 
-    -- Bước 2: sàn dưới coin + đặt vào coin (đã hạ từ +2 xuống +1)
+    -- Bước 2: sàn dưới coin + đặt vào coin (thấp hơn 1 xíu)
     createPartSafe(coin)
     task.wait(0.02)
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 1, 0)
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 1.25, 0) -- 2 -> 1.25 để bám sàn, tránh rơi ngoài map
 
     local t0 = os.clock()
+    local collected = false
     while os.clock() - t0 < 1.25 do
-        if not coin.Parent or not coin:FindFirstChild("TouchInterest") then break end
+        if not coin.Parent then break end
+        if not coin:FindFirstChild("TouchInterest") then
+            collected = true
+            break
+        end
         forceTouch(hrp, coin)
         task.wait(0.03)
+    end
+
+    -- Nếu không collect được trong khung thời gian -> giả định FULL BAG, tắt noclip
+    if not collected and coin and coin:FindFirstChild("TouchInterest") then
+        FullBag = true
+        setNoclip(false)
     end
 
     -- KILL velocity sau TP
@@ -400,8 +410,7 @@ end
 -- ====== NEAREST-SAFE SELECTOR ======
 local MAX_DIST, MAX_Y = 80, 30   -- chặt hơn: |ΔY| 30
 local GROUND_DEPTH = 65
--- Chậm lại một xíu: 0.3 -> 0.4 (thân thiện giả lập & multi-acc)
-local TP_DELAY = 0.4
+local TP_DELAY = 0.2
 
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
@@ -424,50 +433,73 @@ local function isEdgeCoin(pos)
     return ok < 2
 end
 
-local function findNearestSafeCoin(container)
+-- >>> chọn coin NGẪU NHIÊN trong NHÓM gần nhất (tránh dồn vào 1 coin)
+local function findRandomNearestSafeCoin(container)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
-    local nearest, dm = nil, math.huge
+
+    local candidates, dmin = {}, math.huge
     for _, v in ipairs(container:GetChildren()) do
         if v:IsA("BasePart") and v:FindFirstChild("TouchInterest") then
             local d = (hrp.Position - v.Position).Magnitude
             local dy = math.abs(hrp.Position.Y - v.Position.Y)
-            if d < dm and d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) and not isEdgeCoin(v.Position) then
-                dm = d; nearest = v
+            if d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) and not isEdgeCoin(v.Position) then
+                if d < dmin then dmin = d end
+                table.insert(candidates, {part = v, dist = d})
             end
         end
     end
-    return nearest
+    if #candidates == 0 then return nil end
+
+    local window = 8
+    local pool = {}
+    for _, item in ipairs(candidates) do
+        if item.dist <= dmin + window then
+            table.insert(pool, item.part)
+        end
+    end
+    if #pool == 0 then return nil end
+    return pool[math.random(1, #pool)]
 end
 
--- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall) nếu có
+-- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall) + xử lý FullBag
 task.spawn(function()
     while task.wait(1) do
         local ok, vis = pcall(function()
             return PlayerGui.MainGUI.Game.CoinBags.Container.BeachBall.Visible
         end)
+        -- Nếu không thấy UI túi, coi như hết round -> mở khóa lại FullBag
+        if not ok or not vis then
+            FullBag = false
+        end
+
         AutofarmON = ok and vis and (not FullBag) or false
-        setNoclip(AutofarmON)
+
+        -- YÊU CẦU: khi FullBag thì TẮT Noclip ngay
+        if FullBag then
+            setNoclip(false)
+        else
+            setNoclip(AutofarmON)
+        end
     end
 end)
 
--- Vòng farm chính: CHỈ TP COIN GẦN NHẤT (không random, không chain)
+-- Vòng farm chính: chọn coin ngẫu nhiên trong nhóm gần nhất
 task.spawn(function()
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
-    while task.wait(TP_DELAY) do -- pacing an toàn (đã tăng nhẹ)
+    while task.wait(TP_DELAY) do -- pacing an toàn
         if not AutofarmON then continue end
         local container = findCoinContainer()
         if not container then continue end
         pcall(setCollideOff, container)
 
-        -- Tìm coin gần nhất an toàn; nếu không có, nới nhẹ phạm vi 1 lần
-        local coin = findNearestSafeCoin(container)
+        local coin = findRandomNearestSafeCoin(container)
         if not coin then
             local old = MAX_DIST; MAX_DIST = 95
-            coin = findNearestSafeCoin(container)
+            coin = findRandomNearestSafeCoin(container)
             MAX_DIST = old
         end
         if not coin then continue end
