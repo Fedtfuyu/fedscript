@@ -408,7 +408,7 @@ end
 -- ====== NEAREST-SAFE SELECTOR ======
 local MAX_DIST, MAX_Y = 80, 30   -- chặt hơn: |ΔY| 30
 local GROUND_DEPTH = 65
-local TP_DELAY = 0.2
+local TP_DELAY = 0.15
 
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
