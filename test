@@ -1,3 +1,8 @@
+getgenv().Config = {
+    FPS = 3;             -- FPS cap sau khi setup xong (0 = không giới hạn)
+    BlackScreen = true;  -- Overlay đen + HUD
+}
+
 getgenv().cloneref = cloneref or function(x) return x end
 local Services = setmetatable({}, {
     __index = function(self, Ind)
@@ -218,7 +223,7 @@ task.spawn(function()
             local currentText = digits(sourceLabel.Text)
             if currentText ~= lastText and lastText ~= "" then
                 totalCount += 1
-                middleLabel.Text = "Total : " .. sourceLabel.Text
+                middleLabel.Text = "Ball : " .. sourceLabel.Text
                 countLabel.Text = "+" .. totalCount
                 local val = tonumber(currentText) or 0
                 if val >= 90000 then
