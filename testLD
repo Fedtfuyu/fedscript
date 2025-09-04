@@ -335,7 +335,36 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- TP (mượt kiểu tween nhưng là TP vi-bước; hạ thấp nhẹ để không rớt) - NHANH HƠN
+-- ====== TP ANTOÀN (chống kick Invalid position)
+local MAX_STEP_STUDS = 10 -- quãng đường tối đa mỗi bước TP (giữ hợp lệ)
+local HOVER_Y        = 3  -- bay lơ lửng trên coin trước khi hạ
+local LAND_OFFSET_Y  = 0.9
+
+local function microTP(hrp: BasePart, fromCF: CFrame, toCF: CFrame)
+    local start = fromCF
+    local target = toCF
+    local dist = (target.Position - start.Position).Magnitude
+    local steps = math.max(2, math.ceil(dist / MAX_STEP_STUDS))
+    for i = 1, steps do
+        local cf = start:Lerp(target, i/steps)
+
+        -- nếu không có ground phía dưới -> nâng nhẹ để tránh vị trí không hợp lệ
+        if not groundRay(cf.Position, 200) then
+            cf = cf + Vector3.new(0, 1.5, 0)
+        end
+
+        hrp.CFrame = cf
+        RunService.Heartbeat:Wait()
+        if i % 3 == 0 then
+            pcall(function()
+                hrp.AssemblyLinearVelocity = Vector3.new()
+                hrp.AssemblyAngularVelocity = Vector3.new()
+            end)
+        end
+    end
+end
+
+-- TP (mượt, vi-bước, tránh bị kick)
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -344,42 +373,34 @@ local function tpToCoin(coin)
 
     setNoclip(true)
 
-    -- KILL velocity trước TP
     pcall(function()
         hrp.AssemblyLinearVelocity = Vector3.new()
         hrp.AssemblyAngularVelocity = Vector3.new()
     end)
 
-    -- Tạo sàn an toàn dưới coin để không rơi map
+    -- Sàn an toàn dưới coin
     createPartSafe(coin)
 
-    -- Đích TP: ngay tâm coin nhưng đặt thấp một xíu để bám sàn
-    local targetCF = coin.CFrame * CFrame.new(0, 0.9, 0)
-
-    -- "Tween giả" bằng TP vi-bước (nhanh hơn)
-    local startCF = hrp.CFrame
-    local steps = 3           -- giảm bước để nhanh hơn
-    local dt    = 0.006       -- khung thời gian mỗi bước nhỏ hơn
-    for i = 1, steps do
-        local alpha = i/steps
-        hrp.CFrame = startCF:Lerp(targetCF, alpha)
-        task.wait(dt)
-    end
-    -- chốt vị trí đích chính xác
-    hrp.CFrame = targetCF
+    -- Bước 1: tới điểm lơ lửng trên coin (giảm chuyển động ngang “đột ngột”)
+    local hoverCF  = coin.CFrame * CFrame.new(0, HOVER_Y, 0)
+    microTP(hrp, hrp.CFrame, hoverCF)
 
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
 
-    -- Cố gắng "chạm" coin nhanh
+    -- Bước 2: hạ thẳng đứng xuống ngay tâm coin (đặt thấp 1 chút để bám sàn)
+    local landCF = coin.CFrame * CFrame.new(0, LAND_OFFSET_Y, 0)
+    microTP(hrp, hoverCF, landCF)
+    hrp.CFrame = landCF
+
+    -- Chạm coin nhanh
     local t0 = os.clock()
-    while os.clock() - t0 < 0.6 do -- rút ngắn thời gian thử chạm
+    while os.clock() - t0 < 0.6 do
         if not coin.Parent then break end
         if not coin:FindFirstChild("TouchInterest") then break end
         forceTouch(hrp, coin)
         task.wait(0.02)
     end
 
-    -- KILL velocity sau TP
     pcall(function()
         hrp.AssemblyLinearVelocity = Vector3.new()
         hrp.AssemblyAngularVelocity = Vector3.new()
@@ -408,7 +429,7 @@ end
 -- ====== NEAREST-SAFE SELECTOR ======
 local MAX_DIST, MAX_Y = 80, 30
 local GROUND_DEPTH = 65
-local TP_DELAY = 0.2  -- nhanh hơn vòng lặp (trước 0.2)
+local TP_DELAY = 0.2
 
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
@@ -430,7 +451,7 @@ local function isEdgeCoin(pos)
     return ok < 2
 end
 
--- >>> chọn coin NGẪU NHIÊN trong NHÓM gần nhất (tránh dồn vào 1 coin)
+-- >>> chọn coin NGẪU NHIÊN trong NHÓM gần nhất
 local function findRandomNearestSafeCoin(container)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
