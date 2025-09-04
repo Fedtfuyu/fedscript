@@ -1,4 +1,3 @@
-
 getgenv().Config = {
     FPS = 3;             -- FPS cap sau khi setup xong (0 = không giới hạn)
     BlackScreen = true;  -- Overlay đen + HUD
@@ -199,7 +198,7 @@ task.spawn(function()
     middleLabel.Font = Enum.Font.GothamBold
     middleLabel.TextScaled = true
     middleLabel.TextWrapped = true
-    middleLabel.Text = "Test 1 : " .. (sourceLabel.Text or "0")
+    middleLabel.Text = "Test 2 : " .. (sourceLabel.Text or "0")
     middleLabel.Parent = screenGui
 
     local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
@@ -257,6 +256,11 @@ local AutofarmON, FullBag = false, false
 local CoinContainer
 local NoclipConn
 
+-- >>> ADDED: đếm ball theo round
+local ballCount = 0
+local MAX_BALL = 40
+local IDLE_FPS = 2
+
 local function setNoclip(enabled)
     if enabled and not NoclipConn then
         NoclipConn = RunService.Stepped:Connect(function()
@@ -310,8 +314,6 @@ local function tpToCoin(coin)
 
     setNoclip(true)
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
-
-    -- cao hơn 1 chút để hạn chế kẹt/rơi
     hrp.CFrame = coin.CFrame * CFrame.new(0, 2.6, 0)
 
     local t0 = os.clock()
@@ -338,7 +340,7 @@ local function findCoinContainer()
 end
 
 -- ====== NEAREST-SAFE SELECTOR ======
-local MAX_DIST, MAX_Y = 60, 28  -- giảm thêm cho an toàn/giả lập
+local MAX_DIST, MAX_Y = 60, 28  -- an toàn/giả lập
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
     rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
@@ -347,21 +349,28 @@ local function hasGroundBelow(pos)
     return res ~= nil
 end
 
-local function findNearestSafeCoin(container)
+-- >>> ADDED: random trong nhóm coin gần nhất (giảm tranh chấp nhiều acc)
+local function pickRandomNearestSafe(container)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
-    local nearest, dm = nil, math.huge
+
+    local candidates = {}
     for _, v in ipairs(container:GetChildren()) do
         if v:IsA("BasePart") and v:FindFirstChild("TouchInterest") then
             local d = (hrp.Position - v.Position).Magnitude
             local dy = math.abs(hrp.Position.Y - v.Position.Y)
-            if d < dm and d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) then
-                dm = d; nearest = v
+            if d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) then
+                table.insert(candidates, {part=v, dist=d})
             end
         end
     end
-    return nearest
+    if #candidates == 0 then return nil end
+
+    table.sort(candidates, function(a,b) return a.dist < b.dist end)
+    local take = math.min(4, #candidates) -- lấy 4 coin gần nhất
+    local idx = math.random(1, take)
+    return candidates[idx].part
 end
 
 -- Điều chỉnh FPS khi Idle/FullBag để tiết kiệm tài nguyên
@@ -375,20 +384,26 @@ local function setFPSCapSafe(val)
     end)
 end
 
--- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall). Khi full bag -> đứng im
+-- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall). (FullBag UI không dùng để chốt 40, nhưng vẫn giữ để an toàn)
 task.spawn(function()
+    local prevVisible = nil
     while task.wait(0.8) do
         local ok, vis = pcall(function()
             return PlayerGui.MainGUI.Game.CoinBags.Container.BeachBall.Visible
         end)
 
-        -- Nếu UI túi mất/ẩn => coi như FullBag
-        FullBag = ok and (vis == false) or false
-        AutofarmON = ok and vis and (not FullBag) or false
+        -- phát hiện chuyển round: UI túi xuất hiện lại -> reset đếm
+        if ok and prevVisible == false and vis == true then
+            ballCount = 0
+        end
+        prevVisible = ok and vis or prevVisible
 
-        if FullBag then
+        FullBag = false -- không dùng UI để chốt full, để 40 ball chốt
+        AutofarmON = ok and vis and (ballCount < MAX_BALL) or false
+
+        if ballCount >= MAX_BALL then
             setNoclip(false)
-            setFPSCapSafe(2)   -- tiết kiệm CPU/RAM khi full
+            setFPSCapSafe(IDLE_FPS)
         else
             setNoclip(AutofarmON)
             setFPSCapSafe(getgenv().Config.FPS or 3)
@@ -396,27 +411,35 @@ task.spawn(function()
     end
 end)
 
--- Vòng farm chính: CHỈ TP COIN GẦN NHẤT (không random, không chain)
+-- Vòng farm chính
 task.spawn(function()
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
     local noCoinCount = 0
-    while task.wait(0.36) do -- pacing chậm thêm 1 nấc cho an toàn/giả lập
-        if FullBag then continue end
+    while task.wait(0.36) do
+        -- >>> ADDED: đủ 40 thì đứng im
+        if ballCount >= MAX_BALL then
+            continue
+        end
+
         if not AutofarmON then continue end
 
         local container = findCoinContainer()
         if not container then continue end
         pcall(setCollideOff, container)
 
-        local coin = findNearestSafeCoin(container)
+        -- Heuristic reset theo round: khi container trống hẳn 1 lúc -> reset
+        if #container:GetChildren() == 0 then
+            ballCount = 0
+        end
+
+        local coin = pickRandomNearestSafe(container)
         if not coin then
             noCoinCount += 1
             if noCoinCount >= 10 then
-                -- Không thấy coin liên tiếp -> nghỉ tạm, giảm khả năng 267
                 for i=1,25 do
-                    if FullBag then break end
+                    if ballCount >= MAX_BALL then break end
                     task.wait(0.22)
                 end
                 noCoinCount = 0
@@ -429,7 +452,10 @@ task.spawn(function()
         pcall(function()
             createPartSafe(coin)
             task.wait(0.05)
-            tpToCoin(coin)
+            if tpToCoin(coin) then
+                -- >>> ADDED: tăng đếm sau khi TP thành công
+                ballCount = math.min(MAX_BALL, ballCount + 1)
+            end
         end)
 
         task.wait(0.34)
