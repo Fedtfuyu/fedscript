@@ -26,7 +26,7 @@ local GuiService         = Services.GuiService
 local CoreGui            = Services.CoreGui
 
 local LocalPlayer = Players.LocalPlayer
-repeat task.wait(0.5) until game:IsLoaded() and LocalPlayer
+repeat task.wait(5) until game:IsLoaded() and LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 workspace.FallenPartsDestroyHeight = -math.huge
@@ -335,7 +335,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- TP (hai bước + kill velocity + chờ physics)
+-- TP (mượt kiểu tween nhưng là TP vi-bước; hạ thấp nhẹ để không rớt)
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -350,35 +350,33 @@ local function tpToCoin(coin)
         hrp.AssemblyAngularVelocity = Vector3.new()
     end)
 
-    -- Bước 1: staging phía trên coin
-    createStagingAbove(coin)
-    task.wait(0.02)
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 10, 0) -- GIẢM cao hơn trước 1 xíu (12 -> 10)
-    task.wait(0.05)
+    -- Tạo sàn an toàn dưới coin để không rơi map
+    createPartSafe(coin)
+
+    -- Đích TP: ngay tâm coin nhưng đặt thấp một xíu để bám sàn (0.9)
+    local targetCF = coin.CFrame * CFrame.new(0, 0.9, 0)
+
+    -- "Tween giả" bằng TP vi-bước (không dùng TweenService)
+    local startCF = hrp.CFrame
+    local steps = 6           -- mượt hơn thì tăng; nhanh hơn thì giảm
+    local dt    = 0.01        -- nhịp TP vi-bước
+    for i = 1, steps do
+        local alpha = i/steps
+        hrp.CFrame = startCF:Lerp(targetCF, alpha)
+        task.wait(dt)
+    end
+    -- chốt vị trí đích chính xác
+    hrp.CFrame = targetCF
 
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
 
-    -- Bước 2: sàn dưới coin + đặt vào coin (thấp hơn 1 xíu)
-    createPartSafe(coin)
-    task.wait(0.02)
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 1.25, 0) -- 2 -> 1.25 để bám sàn, tránh rơi ngoài map
-
+    -- Cố gắng "chạm" coin nhanh
     local t0 = os.clock()
-    local collected = false
-    while os.clock() - t0 < 1.25 do
+    while os.clock() - t0 < 0.9 do
         if not coin.Parent then break end
-        if not coin:FindFirstChild("TouchInterest") then
-            collected = true
-            break
-        end
+        if not coin:FindFirstChild("TouchInterest") then break end
         forceTouch(hrp, coin)
-        task.wait(0.03)
-    end
-
-    -- Nếu không collect được trong khung thời gian -> giả định FULL BAG, tắt noclip
-    if not collected and coin and coin:FindFirstChild("TouchInterest") then
-        FullBag = true
-        setNoclip(false)
+        task.wait(0.02)
     end
 
     -- KILL velocity sau TP
@@ -476,7 +474,7 @@ task.spawn(function()
 
         AutofarmON = ok and vis and (not FullBag) or false
 
-        -- YÊU CẦU: khi FullBag thì TẮT Noclip ngay
+        -- khi FullBag thì TẮT Noclip ngay
         if FullBag then
             setNoclip(false)
         else
