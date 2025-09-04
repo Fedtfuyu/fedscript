@@ -262,7 +262,7 @@ task.spawn(function()
     middleLabel.Font = Enum.Font.GothamBold
     middleLabel.TextScaled = true
     middleLabel.TextWrapped = true
-    middleLabel.Text = "Total : " .. (sourceLabel.Text or "0")
+    middleLabel.Text = "Ball : " .. (sourceLabel.Text or "0")
     middleLabel.Parent = screenGui
 
     -- +Count label
