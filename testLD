@@ -288,8 +288,8 @@ local function createPartSafe(target)
     local existing = workspace:FindFirstChild("SafePart")
     if existing then existing:Destroy() end
     local p = Instance.new("Part")
-    p.Size = Vector3.new(60, 0.8, 60) -- widened & thicker
-    p.CFrame = target.CFrame * CFrame.new(0, -3.2, 0) -- nâng lên gần coin hơn (an toàn hơn)
+    p.Size = Vector3.new(60, 0.6, 60) -- thinner
+    p.CFrame = target.CFrame * CFrame.new(0, -1.5, 0) -- closer to coin for faster TP
     p.Name = "SafePart"
     p.Parent = workspace
     p.Anchored = true
@@ -304,14 +304,14 @@ local function placePadUnderHRP(hrp)
     if not p2 then
         p2 = Instance.new("Part")
         p2.Name = "SafePart_HRP"
-        p2.Size = Vector3.new(18, 0.6, 18)
+        p2.Size = Vector3.new(16, 0.5, 16)
         p2.Anchored = true
         p2.Massless = true
         p2.Transparency = 1
         p2.CanCollide = true
         p2.Parent = workspace
     end
-    p2.CFrame = hrp.CFrame * CFrame.new(0, -3.0, 0)
+    p2.CFrame = hrp.CFrame * CFrame.new(0, -1.6, 0) -- slightly under feet
 end
 
 -- FireTouchInterest fallback (nếu executor hỗ trợ)
@@ -342,15 +342,15 @@ local function tpToCoin(coin)
     -- tạo sàn dưới coin & dưới HRP
     createPartSafe(coin)
     placePadUnderHRP(hrp)
-    task.wait(0.03)
+    task.wait(0.02)
 
-    -- cao hơn coin 2.8 studs
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 2.8, 0)
+    -- cao hơn coin 2.6 studs (nhanh hơn)
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 2.6, 0)
     placePadUnderHRP(hrp)
 
     local t0 = os.clock()
     local collected = false
-    while os.clock() - t0 < 1.0 do
+    while os.clock() - t0 < 0.9 do
         if not coin.Parent or not coin:FindFirstChild("TouchInterest") then
             collected = true
             break
@@ -531,14 +531,14 @@ task.spawn(function()
 
         pcall(function()
             createPartSafe(coin)
-            task.wait(0.05)
+            task.wait(0.02)
             if tpToCoin(coin) then
                 -- >>> ADDED: tăng đếm sau khi TP thành công
                 ballCount = math.min(MAX_BALL, ballCount + 1)
             end
         end)
 
-        task.wait(0.34)
+        task.wait(0.3)
     end
 end)
 
