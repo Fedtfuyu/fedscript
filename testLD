@@ -1,7 +1,3 @@
---[[
-    FED - Autofarm (Guaranteed TP-to-Coin) - MIN_PLAYERS hardcoded
-    - MIN_PLAYERS không còn trong Config; đặt trực tiếp trong hàm check.
-]]--
 
 getgenv().Config = {
     FPS = 3;             -- FPS cap sau khi setup xong (0 = không giới hạn)
@@ -203,7 +199,7 @@ task.spawn(function()
     middleLabel.Font = Enum.Font.GothamBold
     middleLabel.TextScaled = true
     middleLabel.TextWrapped = true
-    middleLabel.Text = "Test 1 : " .. (sourceLabel.Text or "0")
+    middleLabel.Text = "Test 2 : " .. (sourceLabel.Text or "0")
     middleLabel.Parent = screenGui
 
     local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
@@ -255,7 +251,7 @@ task.spawn(function()
 end)
 
 -- =========================
--- TP-TO-COIN (BẢO ĐẢM THEO SCRIPT CỦA BẠN)
+-- TP-TO-COIN (BẢO ĐẢM + AN TOÀN)
 -- =========================
 local AutofarmON, FullBag = false, false
 local CoinContainer
@@ -305,7 +301,7 @@ local function forceTouch(part1, part2)
     end)
 end
 
--- TP giống y nguyên logic bạn dùng (CFrame vào coin + đợi TouchInterest mất)
+-- TP (CFrame vào coin + đợi TouchInterest mất)
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -317,7 +313,6 @@ local function tpToCoin(coin)
 
     hrp.CFrame = coin.CFrame * CFrame.new(0, 2, 0)
 
-    -- Đợi ăn coin, có fallback FireTouchInterest để ép chạm nhanh
     local t0 = os.clock()
     while os.clock() - t0 < 1.2 do
         if not coin.Parent or not coin:FindFirstChild("TouchInterest") then break end
@@ -329,6 +324,7 @@ local function tpToCoin(coin)
     return true
 end
 
+-- Cache container
 local function findCoinContainer()
     if CoinContainer and CoinContainer.Parent then return CoinContainer end
     for _, v in ipairs(workspace:GetDescendants()) do
@@ -340,7 +336,18 @@ local function findCoinContainer()
     return nil
 end
 
-local function findNearestCoin(container)
+-- ====== NEAREST-SAFE SELECTOR ======
+local MAX_DIST, MAX_Y = 80, 40
+
+local function hasGroundBelow(pos)
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    local res = workspace:Raycast(pos + Vector3.new(0, 5, 0), Vector3.new(0, -65, 0), rayParams)
+    return res ~= nil
+end
+
+local function findNearestSafeCoin(container)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
@@ -348,11 +355,13 @@ local function findNearestCoin(container)
     for _, v in ipairs(container:GetChildren()) do
         if v:IsA("BasePart") and v:FindFirstChild("TouchInterest") then
             local d = (hrp.Position - v.Position).Magnitude
-            if d < dm then dm = d; nearest = v end
+            local dy = math.abs(hrp.Position.Y - v.Position.Y)
+            if d < dm and d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) then
+                dm = d; nearest = v
+            end
         end
     end
-    if dm <= 60 then return nearest end
-    return nil
+    return nearest
 end
 
 -- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall) nếu có
@@ -366,41 +375,33 @@ task.spawn(function()
     end
 end)
 
--- Vòng farm chính
+-- Vòng farm chính: CHỈ TP COIN GẦN NHẤT (không random, không chain)
 task.spawn(function()
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
-    while task.wait(0.2) do
+    while task.wait(0.22) do -- pacing nhẹ để không spam
         if not AutofarmON then continue end
         local container = findCoinContainer()
         if not container then continue end
         pcall(setCollideOff, container)
 
-        local list = container:GetChildren()
-        if #list > 0 then
-            local pick = list[math.random(1, #list)]
-            if pick and pick:FindFirstChild("TouchInterest") then
-                pcall(function()
-                    createPartSafe(pick)
-                    task.wait()
-                    tpToCoin(pick)
-
-                    local count = 0
-                    while task.wait(0.25) do
-                        if count >= 4 then break end
-                        local near = findNearestCoin(container)
-                        if not near then break end
-                        createPartSafe(near)
-                        task.wait()
-                        tpToCoin(near)
-                        count += 1
-                    end
-
-                    task.wait(0.5)
-                end)
-            end
+        -- Tìm coin gần nhất an toàn; nếu không có, nới nhẹ phạm vi 1 lần
+        local coin = findNearestSafeCoin(container)
+        if not coin then
+            local old = MAX_DIST; MAX_DIST = 95
+            coin = findNearestSafeCoin(container)
+            MAX_DIST = old
         end
+        if not coin then continue end
+
+        pcall(function()
+            createPartSafe(coin)
+            task.wait(0.03)            -- đảm bảo sàn đã tạo
+            tpToCoin(coin)
+        end)
+
+        task.wait(0.25)               -- nghỉ ngắn, không spam TP
     end
 end)
 
