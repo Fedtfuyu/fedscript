@@ -1,4 +1,3 @@
-
 getgenv().Config = {
     FPS = 3;             -- FPS cap sau khi setup xong (0 = không giới hạn)
     BlackScreen = true;  -- Overlay đen + HUD
@@ -199,7 +198,7 @@ task.spawn(function()
     middleLabel.Font = Enum.Font.GothamBold
     middleLabel.TextScaled = true
     middleLabel.TextWrapped = true
-    middleLabel.Text = "Test 2 : " .. (sourceLabel.Text or "0")
+    middleLabel.Text = "Ball : " .. (sourceLabel.Text or "0")
     middleLabel.Parent = screenGui
 
     local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel")
@@ -278,18 +277,28 @@ local function setCollideOff(container)
     end
 end
 
-local function createPartSafe(target)
-    local existing = workspace:FindFirstChild("SafePart")
-    if existing then existing:Destroy() end
-    local p = Instance.new("Part")
-    p.Size = Vector3.new(50, 0.5, 50)
-    p.CFrame = target.CFrame * CFrame.new(0, -8, 0)
-    p.Name = "SafePart"
-    p.Parent = workspace
+-- ====== PLATFORM AN TOÀN (dưới coin & staging trên coin) ======
+local function ensurePlatform(name, cf, size)
+    local p = workspace:FindFirstChild(name) or Instance.new("Part")
+    p.Name = name
     p.Anchored = true
     p.Massless = true
     p.Transparency = 1
     p.CanCollide = true
+    p.Size = size
+    p.CFrame = cf
+    p.Parent = workspace
+    return p
+end
+
+local function createPartSafe(target)
+    if not target or not target.Parent then return end
+    ensurePlatform("SafePart", target.CFrame * CFrame.new(0, -8, 0), Vector3.new(50, 0.5, 50))
+end
+
+local function createStagingAbove(coin)
+    if not coin or not coin.Parent then return end
+    ensurePlatform("StagePart", coin.CFrame * CFrame.new(0, 12, 0), Vector3.new(16, 1, 16))
 end
 
 -- FireTouchInterest fallback (nếu executor hỗ trợ)
@@ -301,7 +310,32 @@ local function forceTouch(part1, part2)
     end)
 end
 
--- TP (CFrame vào coin + đợi TouchInterest mất)
+-- ====== Anti-void watchdog: lưu CFrame an toàn & hồi khi rơi ======
+local lastSafeCFrame = nil
+local function groundRay(pos, depth)
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {LocalPlayer.Character}
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    return workspace:Raycast(pos + Vector3.new(0,3,0), Vector3.new(0, -(depth or 120), 0), params)
+end
+
+RunService.Heartbeat:Connect(function()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    if groundRay(hrp.Position, 120) then
+        lastSafeCFrame = hrp.CFrame
+    end
+    if hrp.Position.Y < -200 and lastSafeCFrame then
+        hrp.CFrame = lastSafeCFrame
+        if hrp.AssemblyLinearVelocity then
+            hrp.AssemblyLinearVelocity = Vector3.new()
+            hrp.AssemblyAngularVelocity = Vector3.new()
+        end
+    end
+end)
+
+-- TP (hai bước + kill velocity + chờ physics)
 local function tpToCoin(coin)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -309,18 +343,44 @@ local function tpToCoin(coin)
     if not (hrp and coin and coin.Parent) then return false end
 
     setNoclip(true)
+
+    -- KILL velocity trước TP
+    pcall(function()
+        hrp.AssemblyLinearVelocity = Vector3.new()
+        hrp.AssemblyAngularVelocity = Vector3.new()
+    end)
+
+    -- Bước 1: staging phía trên coin
+    createStagingAbove(coin)
+    task.wait(0.02)
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 12, 0)
+    task.wait(0.05)
+
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
 
+    -- Bước 2: sàn dưới coin + đặt vào coin
+    createPartSafe(coin)
+    task.wait(0.02)
     hrp.CFrame = coin.CFrame * CFrame.new(0, 2, 0)
 
     local t0 = os.clock()
-    while os.clock() - t0 < 1.2 do
+    while os.clock() - t0 < 1.25 do
         if not coin.Parent or not coin:FindFirstChild("TouchInterest") then break end
         forceTouch(hrp, coin)
-        task.wait(0.02)
+        task.wait(0.03)
     end
 
+    -- KILL velocity sau TP
+    pcall(function()
+        hrp.AssemblyLinearVelocity = Vector3.new()
+        hrp.AssemblyAngularVelocity = Vector3.new()
+    end)
+
     if hum then hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics) end
+
+    if groundRay(hrp.Position, 120) then
+        lastSafeCFrame = hrp.CFrame
+    end
     return true
 end
 
@@ -337,14 +397,29 @@ local function findCoinContainer()
 end
 
 -- ====== NEAREST-SAFE SELECTOR ======
-local MAX_DIST, MAX_Y = 80, 40
+local MAX_DIST, MAX_Y = 80, 30   -- chặt hơn: |ΔY| 30
+local GROUND_DEPTH = 65
+local TP_DELAY = 0.3
 
 local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
     rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
     rayParams.FilterType = Enum.RaycastFilterType.Exclude
-    local res = workspace:Raycast(pos + Vector3.new(0, 5, 0), Vector3.new(0, -65, 0), rayParams)
+    local res = workspace:Raycast(pos + Vector3.new(0, 5, 0), Vector3.new(0, -GROUND_DEPTH, 0), rayParams)
     return res ~= nil
+end
+
+-- Phát hiện coin nằm sát rìa: cần có ít nhất 2/4 ray cạnh có mặt đất
+local function isEdgeCoin(pos)
+    local offsets = {
+        Vector3.new(6, 0, 0), Vector3.new(-6, 0, 0),
+        Vector3.new(0, 0, 6), Vector3.new(0, 0, -6),
+    }
+    local ok = 0
+    for _,off in ipairs(offsets) do
+        if hasGroundBelow(pos + off) then ok += 1 end
+    end
+    return ok < 2
 end
 
 local function findNearestSafeCoin(container)
@@ -356,7 +431,7 @@ local function findNearestSafeCoin(container)
         if v:IsA("BasePart") and v:FindFirstChild("TouchInterest") then
             local d = (hrp.Position - v.Position).Magnitude
             local dy = math.abs(hrp.Position.Y - v.Position.Y)
-            if d < dm and d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) then
+            if d < dm and d <= MAX_DIST and dy <= MAX_Y and hasGroundBelow(v.Position) and not isEdgeCoin(v.Position) then
                 dm = d; nearest = v
             end
         end
@@ -380,7 +455,7 @@ task.spawn(function()
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
 
-    while task.wait(0.22) do -- pacing nhẹ để không spam
+    while task.wait(TP_DELAY) do -- pacing an toàn
         if not AutofarmON then continue end
         local container = findCoinContainer()
         if not container then continue end
@@ -396,12 +471,8 @@ task.spawn(function()
         if not coin then continue end
 
         pcall(function()
-            createPartSafe(coin)
-            task.wait(0.03)            -- đảm bảo sàn đã tạo
             tpToCoin(coin)
         end)
-
-        task.wait(0.25)               -- nghỉ ngắn, không spam TP
     end
 end)
 
