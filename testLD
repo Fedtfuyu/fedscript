@@ -3,9 +3,6 @@ getgenv().Config = {
     BlackScreen = true;  -- Overlay đen + HUD
 }
 
--- =========================
--- TIỆN ÍCH TƯƠNG THÍCH
--- =========================
 getgenv().cloneref = cloneref or function(x) return x end
 local Services = setmetatable({}, {
     __index = function(self, Ind)
@@ -261,6 +258,11 @@ local ballCount = 0
 local MAX_BALL = 40
 local IDLE_FPS = 2
 
+-- >>> ADDED: lưu vị trí an toàn & chống rơi/ra ngoài map
+local lastSafeCF = nil
+local SAFE_Y_MIN = -50
+local WORLD_BOUND = 6000
+
 local function setNoclip(enabled)
     if enabled and not NoclipConn then
         NoclipConn = RunService.Stepped:Connect(function()
@@ -286,14 +288,30 @@ local function createPartSafe(target)
     local existing = workspace:FindFirstChild("SafePart")
     if existing then existing:Destroy() end
     local p = Instance.new("Part")
-    p.Size = Vector3.new(50, 0.5, 50)
-    p.CFrame = target.CFrame * CFrame.new(0, -8, 0)
+    p.Size = Vector3.new(60, 0.8, 60) -- widened & thicker
+    p.CFrame = target.CFrame * CFrame.new(0, -3.2, 0) -- nâng lên gần coin hơn (an toàn hơn)
     p.Name = "SafePart"
     p.Parent = workspace
     p.Anchored = true
     p.Massless = true
     p.Transparency = 1
     p.CanCollide = true
+end
+
+-- >>> ADDED: pad phụ ngay dưới HRP để đứng vững
+local function placePadUnderHRP(hrp)
+    local p2 = workspace:FindFirstChild("SafePart_HRP")
+    if not p2 then
+        p2 = Instance.new("Part")
+        p2.Name = "SafePart_HRP"
+        p2.Size = Vector3.new(18, 0.6, 18)
+        p2.Anchored = true
+        p2.Massless = true
+        p2.Transparency = 1
+        p2.CanCollide = true
+        p2.Parent = workspace
+    end
+    p2.CFrame = hrp.CFrame * CFrame.new(0, -3.0, 0)
 end
 
 -- FireTouchInterest fallback (nếu executor hỗ trợ)
@@ -314,16 +332,42 @@ local function tpToCoin(coin)
 
     setNoclip(true)
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
-    hrp.CFrame = coin.CFrame * CFrame.new(0, 2.6, 0)
+
+    -- dừng trớn trước khi dịch chuyển
+    pcall(function()
+        hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+    end)
+
+    -- tạo sàn dưới coin & dưới HRP
+    createPartSafe(coin)
+    placePadUnderHRP(hrp)
+    task.wait(0.03)
+
+    -- cao hơn coin 2.8 studs
+    hrp.CFrame = coin.CFrame * CFrame.new(0, 2.8, 0)
+    placePadUnderHRP(hrp)
 
     local t0 = os.clock()
-    while os.clock() - t0 < 0.95 do
-        if not coin.Parent or not coin:FindFirstChild("TouchInterest") then break end
+    local collected = false
+    while os.clock() - t0 < 1.0 do
+        if not coin.Parent or not coin:FindFirstChild("TouchInterest") then
+            collected = true
+            break
+        end
         forceTouch(hrp, coin)
+        pcall(function()
+            hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+        end)
         task.wait(0.03)
     end
 
     if hum then hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics) end
+
+    -- cập nhật vị trí an toàn
+    if collected then
+        lastSafeCF = hrp.CFrame
+    end
     return true
 end
 
@@ -345,7 +389,7 @@ local function hasGroundBelow(pos)
     local rayParams = RaycastParams.new()
     rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
     rayParams.FilterType = Enum.RaycastFilterType.Exclude
-    local res = workspace:Raycast(pos + Vector3.new(0, 5, 0), Vector3.new(0, -65, 0), rayParams)
+    local res = workspace:Raycast(pos + Vector3.new(0, 5, 0), Vector3.new(0, -85, 0), rayParams)
     return res ~= nil
 end
 
@@ -383,6 +427,42 @@ local function setFPSCapSafe(val)
         end
     end)
 end
+
+-- >>> ADDED: theo dõi vị trí an toàn định kỳ
+task.spawn(function()
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    while task.wait(0.5) do
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local hit = workspace:Raycast(hrp.Position, Vector3.new(0,-10,0), rayParams)
+            if hit then
+                lastSafeCF = hrp.CFrame
+            end
+        end
+    end
+end)
+
+-- >>> ADDED: Anti-void / anti-out-of-bounds
+RunService.Heartbeat:Connect(function()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local pos = hrp.Position
+    if pos.Y < SAFE_Y_MIN or math.abs(pos.X) > WORLD_BOUND or math.abs(pos.Z) > WORLD_BOUND then
+        setNoclip(true)
+        pcall(function()
+            hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+            hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        end)
+        if lastSafeCF then
+            hrp.CFrame = lastSafeCF
+        else
+            hrp.CFrame = CFrame.new(0, 100, 0)
+        end
+        placePadUnderHRP(hrp)
+    end
+end)
 
 -- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall). (FullBag UI không dùng để chốt 40, nhưng vẫn giữ để an toàn)
 task.spawn(function()
