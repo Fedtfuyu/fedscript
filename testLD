@@ -84,7 +84,7 @@ local function boostFPS()
         Terrain.WaterWaveSpeed = 0
         Terrain.WaterReflectance = 0
         Terrain.WaterTransparency = 1
-    end>
+    end
     Lighting.GlobalShadows = false
     Lighting.FogEnd = 9e9
     Lighting.FogStart = 9e9
