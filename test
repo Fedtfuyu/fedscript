@@ -140,6 +140,8 @@ task.spawn(function()
     Black.Size = UDim2.new(1, 0, 1, 0)
     Black.BackgroundColor3 = Color3.new(0, 0, 0)
     Black.ZIndex = 9999
+    -- === expose Black để task khác có thể đổi màu khi trúng Godly/Chroma ===
+    getgenv()._BLACKFRAME = Black
 
     local function waitSource()
         local gui = PlayerGui
@@ -242,6 +244,55 @@ task.spawn(function()
 end)
 
 -- =========================
+-- CHECK INVENTORY: nếu có Godly/Chroma -> chuyển BlackScreen xanh lá
+-- =========================
+task.spawn(function()
+    -- chờ Black frame tồn tại
+    repeat task.wait(0.5) until rawget(getgenv(), "_BLACKFRAME")
+    local function getWeaponsDB()
+        local ok, db = pcall(function()
+            return require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"))
+        end)
+        return ok and db and db.Weapons or nil
+    end
+    local function hasGodlyOrChromaIn(t, weaponsDB)
+        if type(t) ~= "table" or type(weaponsDB) ~= "table" then return false end
+        for k, v in pairs(t) do
+            -- tên item có thể ở key hoặc trong bảng con
+            local name = (type(k) == "string" and k)
+                      or (type(v) == "table" and (v.ItemName or v.Name))
+            if name and weaponsDB[name] then
+                local meta = weaponsDB[name]
+                if meta and (meta.Rarity == "Godly" or meta.Chroma) then
+                    return true
+                end
+            end
+            if type(v) == "table" and hasGodlyOrChromaIn(v, weaponsDB) then
+                return true
+            end
+        end
+        return false
+    end
+    local function inventoryHasGodlyOrChroma()
+        local okPD, pd = pcall(function()
+            return require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData"))
+        end)
+        if not okPD or not pd then return false end
+        local weaponsDB = getWeaponsDB()
+        if not weaponsDB then return false end
+        return hasGodlyOrChromaIn(pd, weaponsDB)
+    end
+    while task.wait(5) do
+        local ok, has = pcall(inventoryHasGodlyOrChroma)
+        if ok and has then
+            local frame = rawget(getgenv(), "_BLACKFRAME")
+            if frame then pcall(function() frame.BackgroundColor3 = Color3.fromRGB(0,255,0) end) end
+            break
+        end
+    end
+end)
+
+-- =========================
 -- TP-TO-COIN (BẢO ĐẢM + AN TOÀN)
 -- =========================
 local AutofarmON, FullBag = false, false
@@ -340,7 +391,6 @@ local function microTP(hrp: BasePart, fromCF: CFrame, toCF: CFrame)
     for i = 1, steps do
         local cf = start:Lerp(target, i/steps)
 
-        -- nếu không có ground phía dưới -> nâng nhẹ để tránh vị trí không hợp lệ
         if not groundRay(cf.Position, 200) then
             cf = cf + Vector3.new(0, 1.5, 0)
         end
@@ -370,21 +420,17 @@ local function tpToCoin(coin)
         hrp.AssemblyAngularVelocity = Vector3.new()
     end)
 
-    -- Sàn an toàn dưới coin
     createPartSafe(coin)
 
-    -- Bước 1: tới điểm lơ lửng trên coin (giảm chuyển động ngang “đột ngột”)
     local hoverCF  = coin.CFrame * CFrame.new(0, HOVER_Y, 0)
     microTP(hrp, hrp.CFrame, hoverCF)
 
     if hum then hum:ChangeState(Enum.HumanoidStateType.Physics) end
 
-    -- Bước 2: hạ thẳng đứng xuống ngay tâm coin (đặt thấp 1 chút để bám sàn)
     local landCF = coin.CFrame * CFrame.new(0, LAND_OFFSET_Y, 0)
     microTP(hrp, hoverCF, landCF)
     hrp.CFrame = landCF
 
-    -- Chạm coin nhanh
     local t0 = os.clock()
     while os.clock() - t0 < 0.6 do
         if not coin.Parent then break end
@@ -443,7 +489,6 @@ local function isEdgeCoin(pos)
     return ok < 2
 end
 
--- >>> chọn coin NGẪU NHIÊN trong NHÓM gần nhất
 local function findRandomNearestSafeCoin(container)
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -473,7 +518,6 @@ local function findRandomNearestSafeCoin(container)
     return pool[math.random(1, #pool)]
 end
 
--- Bật/tắt Autofarm dựa vào GUI túi coin (BeachBall) + xử lý FullBag
 task.spawn(function()
     while task.wait(1) do
         local ok, vis = pcall(function()
@@ -493,7 +537,6 @@ task.spawn(function()
     end
 end)
 
--- Vòng farm chính: chọn coin ngẫu nhiên trong nhóm gần nhất
 task.spawn(function()
     LocalPlayer.CharacterAdded:Connect(function(char) char:WaitForChild("HumanoidRootPart") end)
     if LocalPlayer.Character then LocalPlayer.Character:WaitForChild("HumanoidRootPart") end
@@ -610,5 +653,121 @@ end
 -- local status = checkAlt()
 -- if status > 4 then TeleportService:Teleport(game.PlaceId, LocalPlayer) end
 ]]--
+
+-- =========================
+-- WEBHOOK + OPEN CRATE (MM2) — TƯƠNG THÍCH VỚI SCRIPT DƯỚI
+-- =========================
+task.spawn(function()
+    local v_u_13 = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"))
+    local playerName = Players.LocalPlayer.Name
+    local args = {"Summer2025Box", "MysteryBox", "BeachBalls2025"}
+
+    print("Webhook AutoCrate Ready")
+
+    local function getWebhookURL()
+        local cfg = rawget(getgenv(), "Config")
+        local a = getgenv().Config and getgenv().Config.WEBHOOK_URL or ""
+        local b = type(cfg) == "table" and (cfg["Url Webhook"] or cfg["URL Webhook"]) or ""
+        return (a ~= "" and a) or (b ~= "" and b) or ""
+    end
+    local function getWebhookNote()
+        local cfg = rawget(getgenv(), "Config")
+        local a = getgenv().Config and getgenv().Config.WEBHOOK_NOTE or ""
+        local b = type(cfg) == "table" and (cfg["Note"] or cfg["note"]) or ""
+        return (a ~= "" and a) or (b ~= "" and b) or "No Note"
+    end
+
+    local function getimage(id)
+        local ok, response = pcall(function()
+            return request({
+                Url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. tostring(id) ..
+                      "&returnPolicy=PlaceHolder&size=420x420&format=webp",
+                Method = 'GET',
+                Headers = { ["Content-Type"] = "application/json" }
+            })
+        end)
+
+        if ok and response and response.StatusCode == 200 then
+            local bodyOk, body = pcall(function() return HttpService:JSONDecode(response.Body) end)
+            if bodyOk and body and body.data and #body.data > 0 then
+                return body.data[1].imageUrl
+            end
+        end
+    end
+
+    local function flashBlackToGreen()
+        local frame = rawget(getgenv(), "_BLACKFRAME")
+        if not frame then return end
+        pcall(function()
+            frame.BackgroundColor3 = Color3.fromRGB(0,255,0)
+        end)
+    end
+
+    local function sendwh(item)
+        local data = v_u_13.Weapons[item]
+        if not data then return end
+
+        local isGodly  = (data["Rarity"] == "Godly")
+        local isChroma = data["Chroma"] or false
+
+        if isGodly or isChroma then
+            flashBlackToGreen()
+
+            local mention = ""
+            local id = tostring(getgenv().Config.DISCORD_ID or "")
+            if id ~= "" then mention = "<@" .. id .. "> " end
+
+            local title = isChroma
+                and (mention .. "Found: " .. data["ItemName"] .. " (Chroma)")
+                or  (mention .. "Found: " .. data["ItemName"])
+
+            local embed = {
+                ["title"] = "MM2",
+                ["color"] = 0x09FFF8,
+                ["footer"] = { ["text"] = getWebhookNote() },
+                ["fields"] = {
+                    { ["name"] = "Username", ["value"] = "```" .. playerName .. "```" },
+                    { ["name"] = "Item:",    ["value"] = "```\n" .. tostring(data["ItemName"]) .. "```" },
+                    { ["name"] = "Rarity:",  ["value"] = "```\n" .. tostring(data["Rarity"]) .. "```" },
+                },
+                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+                ["thumbnail"] = { ["url"] = getimage(data["ItemID"]) }
+            }
+
+            pcall(function()
+                request({
+                    Url = getWebhookURL(),
+                    Method = "POST",
+                    Headers = { ["Content-Type"] = "application/json" },
+                    Body = HttpService:JSONEncode({
+                        username = "MM2",
+                        content = title,
+                        embeds = { embed }
+                    })
+                })
+            end)
+        end
+    end
+
+    while task.wait(1) do
+        if not getgenv().Config.OpenCrate then continue end
+
+        local okPD, profileData = pcall(function()
+            return require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData"))
+        end)
+        if not okPD or not profileData then continue end
+
+        local ball = profileData.Materials.Owned["BeachBalls2025"] or 0
+        if math.floor(ball) >= 800 then
+            local okInvoke, result = pcall(function()
+                return ReplicatedStorage.Remotes.Shop.OpenCrate:InvokeServer(unpack(args))
+            end)
+            if okInvoke then
+                print("Crate Result:", result)
+                pcall(sendwh, result)
+            end
+        end
+    end
+end)
 
 pcall(function() setfpscap(getgenv().Config.FPS or 0) end)
