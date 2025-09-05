@@ -1,8 +1,3 @@
-getgenv().Config = {
-    FPS = 3;             -- FPS cap sau khi setup xong (0 = không giới hạn)
-    BlackScreen = true;  -- Overlay đen + HUD
-}
-
 getgenv().cloneref = cloneref or function(x) return x end
 local Services = setmetatable({}, {
     __index = function(self, Ind)
