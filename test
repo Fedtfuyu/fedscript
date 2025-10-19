@@ -1,4 +1,3 @@
--- Bật TP nhặt theo source dưới
 local USE_NEW_TP = true
 
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
@@ -397,7 +396,7 @@ end
 -- HẾT HUD
 -- =========================
 
--- Kick sau 5 phút không tăng token (theo UI Tokens)
+-- HOP/REJOIN sau 5 phút không tăng token (THAY THẾ KICK)
 local function cleanToken(text) return text:gsub(",", "") end
 local tokenLabel = Players.LocalPlayer:WaitForChild("PlayerGui")
     :WaitForChild("CrossPlatform")
@@ -422,7 +421,10 @@ end)
 task.spawn(function()
     while task.wait(60) do
         if getgenv().config["Kick5m"] and (tick() - lastChangeTime) >= 300 then
-            Players.LocalPlayer:Kick("Kick5m")
+            -- THAY ĐỔI THEO YÊU CẦU: Không Kick nữa, chỉ Hop/Rejoin server
+            warn("[NoToken5m] Không tăng token trong 5 phút -> Hop/Rejoin server...")
+            HopServer(true) -- ưu tiên hop server dân ít; fallback rejoin nếu cần
+            -- sau khi Teleport thì thread này của phiên cũ sẽ ngừng
         end
     end
 end)
@@ -479,7 +481,7 @@ local function sendwh(item)
     end
 end
 
-spawn(function()
+task.spawn(function()
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local Remotes = ReplicatedStorage:WaitForChild("Remotes")
     local Shop = Remotes:WaitForChild("Shop")
@@ -511,7 +513,6 @@ spawn(function()
         end
     end
 end)
-
 
 ----------------------------------------------------------------
 -- CHECK FULL BAG (Candy) → HOP/REJOIN VÒNG LẶP TỚI KHI ĐỔI SERVER
