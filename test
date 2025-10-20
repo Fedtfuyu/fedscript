@@ -521,7 +521,7 @@ task.spawn(function()
                 local boxType = eventInfo.BoxType
                 local coinType = eventInfo.CoinType
 
-                local ball = profileData.Materials.Owned["BeachBalls2025"] or 0
+                local ball = profileData.Materials.Owned["Candies2025"] or 0
                 if math.floor(ball) >= 800 then
                     local args = { boxType, "MysteryBox", coinType }
                     local result = OpenCrate:InvokeServer(unpack(args))
