@@ -1,118 +1,721 @@
-return {
-    "Cosmicphaser41qspwoe", "Modern1RRdJcRiHzuK", "Hyper3HysGGYbza6xebD", "NeonvirusuBRAull", "Atomicprotocol4Svr",
-    "Blade35oj", "virus72rJno", "tech_Guardian4aCl3", "atomic_shadowWza3yC", "pixelWarden53l6AW",
-    "Vapor_Blade4x", "Cyberneticdrone_3dBB", "vapor_explorer50n", "stellar0RljLZ", "FuturisticSynth_9L",
-    "Robo_NinjaSB4t", "robo_MatrixSyD", "futuristic_waveOjrk", "QuantumzW4Vjmy", "stellargamer2T5qaPJy",
-    "Electro_cipher8A5nR", "modernwarden_2j", "glitchBlade3xJ", "cosmicWaveDcu4", "dynamicNetwork68iVbk",
-    "stellaralgorithmfG", "VortexM6meuVT", "ModernExplorer38Jm", "Neonprotocol5je", "Robosynth90to",
-    "pixel7vPIPLYyzwcDSN5", "modernninja_4m", "dynamicOperatorY", "signal52EdVaepWhx", "electroCircuit_3NcSN",
-    "modernalgorithm102S", "Electrophasercb", "Zone6NiUzc9C7", "wave84N", "futuristicCxijTqo",
-    "ShadowTAY5", "CyberneticZ8", "operatorY4IP0eh513jJ", "infra_InterfaceN2Rr", "Futuristic4ObXOrKk",
-    "ElectroSynth_1K", "binaryByte0UqTEXW35g", "Solar2Yxd8kfRxbPX9H", "vaporByte0z0P", "SyntheticVortex42z",
-    "Cyber3RV", "TechWave38zohE35C", "Nano_Circuit3HUf", "Moderndrone4SlyFg", "wardenIVx06rd3I",
-    "stellar89y", "NeonCircuit58FGJe", "explorer40oGZtw", "Cybernetic5Tocu", "nanowarden78v8zXuh",
-    "solar_Explorerdrpp", "Synthetic_Drone42CBa", "vortex63BKuiVeg9ni", "atomic1gJ", "Virus98O9",
-    "NeonInterface8pI0rC2", "GlitchInterface1tgj", "Vapor_algorithm6G", "Guardian70fMOw3RjD", "AtomicCore2A4W",
-    "interface6qqu", "Cipher16BAmws6l", "Digital8qlHHQFFoCGl", "Synthetic2etK37pyiIF", "matrixQ9Dcp7q9W4IQ9",
-    "Infracore3N", "Bot12GFEsLvuOjD", "InterfaceymnbmS", "Cybernetic5S", "quantumninja30uJBy",
-    "Dronen86N5VLJUajqr2", "avatarYz9Cx8Y6Zvzv", "Atomic_shadowB", "modern_cipher25qx2B3", "vapor_warden5BfV",
-    "algorithm15T9Thk", "Gamer54OEtIYIKpz2LHH", "Cyberninja62X", "neonavatar84vuI5Of", "Matrix30BvmaN",
-    "Pixel_OperatorWmy", "Nanowave79HHI", "hyper_system89R2r", "ElectricOperator50Q", "quantumAvatar3dF2ys",
-    "nanoDataX98t", "cipherMlaRyK1kmt", "roboticYc", "HyperInterface7gmFJ", "robo6xVr49T1BF6bM6l4",
-    "Glitchblade_0J", "cosmic9H", "Tech_Dronehh", "TechCipherZVE00UPlr", "GlitchCipher_176215",
-    "electricNinjacHyl", "neon_warden20tNH", "program68vhCIN", "Tech_Guardian550H", "electroGRDg8cVy",
-    "RoboticByte38ws", "virtualNinja27XHH", "binaryWaveDDl0ePqPN", "virtual1gRX", "Quantum_Pulse4P4IO7",
-    "Guardian48uOdIpDZ", "ElectroBlade7Do", "nanoPulsefnh27", "Binary_ProgramIavC", "robo_ShadowJzpa6CHLO",
-    "neongamer39ZoHmQF8pE", "tech_phaser35Z1yyPP8", "Nano9um", "stellar_avatar747", "Glitch_RunnerMSt",
-    "vaporwarden50DO3", "pixelninja_9ZM", "techMatrix_8W7GWd", "digital_droneSons", "modern_runner5AL7e",
-    "nano0Nf6pNk4D", "cosmic_ninja499", "virtualm0hy72", "Interface7ZUi", "nanoSynth68V3Cwe1",
-    "Glitch_matrixK7RDNCa", "Cosmic_Algorithm430", "interfacea8R31t5RdGD", "pixelProtocol4B4", "Futuristicwave34U",
-    "ygynevys", "yaagsufvz", "usbplwz", "ylpimk", "xvyikof", "yfwfjei", "uwvdvls", "pzhyhr", "wbufcmb",
-    "xuwrtd", "Solar_zone7YFY", "FuturisticoperatorjL", "vapor_synthnQW", "pixel_pulse7FxeHF", "HyperphaserfwFku",
-    "cyberVNPCp", "electroCipher_7glvL", "Wave87s8SgGTSQ4nmchh", "Cyber_Virus0iQG13mQ", "atomicRunnerZN1",
-    "Avatar60ZdPAHkeq4Q", "quantum_Avatar67m7a2", "binaryVirus1yCBjF", "pirate18SZmq5a", "digitalwizard29hNEQk",
-    "Tech_Pulse7HcNI", "neon_explorer06zhS", "futuristic_Virus7Auq", "StellarWave_7j1xfhR", "ModernSignal_3uuH",
-    "Binary0jAtppcnE", "drone84Nr5ES", "Signal86qqiH19OGn", "Neon_WavecL", "Zone20RW0596MXcwi", "cyber_Avatar5dUc",
-    "Hyperalgorithm77ZlUi", "robotic1RYU", "System34QJvjON7b7", "ninja59wWe", "zssnvor", "xxmiuj", "ydhblrniu",
-    "meclzpdt", "zxexfdf", "vomgmc", "xhuuoxp", "rdoezsvf", "kbrhzj", "yewrlriq", "ztgxfnoju", "gpnsxye",
-    "wdcepzqz", "zqbltc", "uwjhefel", "yliptnoqa", "vwkuqyns", "zvuhqsa", "vsapur", "ycarznodl", "lzjigecl",
-    "olenqifqg", "yfwijv", "xvyxfh", "yejsayv", "qweowrxen", "yhxbwsut", "xfiresj", "yeinkwkl", "zwjldri",
-    "xbuhrl", "vyjshor", "zqyflix", "yamhqabh", "ydsmsmo", "vojmhdg", "xyxevm", "vqqyxrejh", "qjcrvkaj",
-    "ydyylgn", "xnlhfk", "xguogud", "vnigxboti", "vtasbei", "vowdjv", "vnutxmb", "vtgwtcap", "ttovpyfu",
-    "qmjilc", "ssytzi", "vqzlypjb", "vwzucghb", "vqpgttny", "vnynql", "yhjmcolaj", "xeqfyl", "vpvlqrsxc",
-    "vzgrzsc", "ygrmwkmmm", "vpmcfhi", "vnnhhnxdi", "vvsygzlo", "vsbbms", "waczqve", "xfbanlhkv", "xdyxfafkl",
-    "vwqqduiyr", "wcajuepat", "xiwqqry", "vqrluocc", "vmjfpfpq", "vpbhwmzdm", "viydzqwo", "vwrmzw", "vzageg",
-    "xdiiglmm", "ydgddmttl", "xwyahptx", "xdaacyarr", "xvnuxalmd", "xzmcsgg", "uxidxwf", "nufvmeh", "vmfwvgoz",
-    "voxxag", "vcqealyo", "vrmlcnz", "aizvybhl", "vyxayg", "xioctjnz", "xokbmfbp", "vxloxnpzc", "zqmscghnr",
-    "yaoxcdq", "eniyutj", "ostowlq", "xwpnqzeza", "wardbnb", "qyemeb", "qxiilmrf", "rquedfwn", "tinfdyrf",
-    "tfwadmc", "rracsp", "thkeauee", "tgzhfn", "tskwxsubq", "txezoz", "stytgw", "tefuigi", "txhvax", "tudpianvv",
-    "tkchznnts", "tcjrwqs", "ttfxrln", "vrbmek", "vlaeetyyd", "uyxhmq", "twjmwqjw", "tkguypwf", "rrxmcg",
-    "rrymcxtke", "rqpkzst", "thhciq", "tgzihwt", "rqpwmr", "uzttbkml", "tzasvyq", "tbkbid", "rnuoqjsu",
-    "rmueslk", "vcnllj", "svqkuy", "rnfttombg", "tdcoznsth", "tjbaktfrh", "sxmfcsdnd", "rtketot", "rmpjbdo",
-    "vksbdvt", "rhueypd", "tgdyctq", "vuuklx", "syjbtb", "rgcbrkj", "rmsvcbug", "ssvyqgdjd", "rugeursj",
-    "rslzgzza", "stuplvvz", "matrix56QZJ1lfMm1M", "hyperSynth1018I", "Electrobyte21FhZdvT", "Quantum_bladefwHPj",
-    "cybernetic0I56GtA", "techPirate5YMKME", "DigitalAvatar_5FkJ", "Cybernetic0tGha", "Hyper5AFohb89QrkJaQz",
-    "Tech21EMdSZA6", "interface91JKC", "Electriccircuit60M", "Electric_PirateEq", "VaporShadowxib01P",
-    "Cyberneticguardian3H", "atomic_Pulse7e3gK", "tech_Signal7rWpk", "dynamicwave8098", "pixelSynth_7OX",
-    "virtualdroneg8Gj", "Modern10zA5", "ByteTvZDcnHQ", "Infra_shadowPtcqUI8", "ElectricNetwork60gI", "atomic7edvuhMp",
-    "Quantum9cO2VyLpw", "electro_RiderBzDY3", "Infra_Phaser83xGvs", "solarBlade_5Z6", "Pixel7yl01HRu5CL",
-    "quantumBot65NDp7R", "GlitchNinja_4zB", "digital_Operator3Dp4", "cybernetic_ShadowFL", "cybernetic_signalU2D",
-    "atomicMatrix9ureDwj", "PixelNetwork0ijA4", "Digital7yq", "Nano_program8Kps7Q", "Cosmic_bot4mNYX",
-    "Cybernetic_Circuit47", "Modern_shadow0E7vs", "data7GxTnSaV7KYohA", "Modern_synthocx", "VirtualM4vyIyxqM",
-    "binary_Program8xZ", "Hyper_zonepMf4hRp", "neoncipherfn2efkdGX", "VaporWarden_8oDse", "Solarexplorer41h",
-    "stellarrunner5Ss9gsY", "AtomicPirate9Lni", "digital5ck9DoznhO", "stellar_Matrix99N6", "hyperg4NICtoIl",
-    "DynamicSynthc1EfCmU", "Infrabyte69O", "electro_operator0OT", "rider32TDe6KhQ", "Explorer753nRITh",
-    "Tech_systemuOOzDGoK", "AtomicPirate3l", "CosmicIA9", "DigitalMvkJc", "tech_Gamer6i1cU", "Infracore_6kQI8Z",
-    "roboticbot_8lvLo7D", "infraJA4CQiPYIl2", "neonWaveesBgcpy", "Robo_matrixgd", "Solar_ninja3Q", "vapor_wizardQYq",
-    "RoboticPirateT", "dynamic_operator3c", "Pixel_Runnerdxf9y", "Robo_avatar0hq", "techVortex1SBuofWDw",
-    "botTV5C6g7wxhNBlk", "RoboAlgorithm16zy", "Stellarzone3Q6DtSWG", "electroCircuit22JiqZ", "Roboticsynthyruu",
-    "atomicvGbPigyXiLNO5H", "DigitalWave579HAitr", "BinaryPirate_1AEUwF", "SignalBbn0qv5RF", "SyntheticcJDiYv",
-    "Modernvortex51YgZ", "SolarProgram_0684", "InterfaceqNDrTkO", "Futuristicgamer14Z", "stellar_Cipher4ozwh",
-    "InfraProgramJ0VmDb", "ModernZUIM96cgK2UrG", "DronebRtupF9Zv", "ElectroBlade17OxuP3", "Infra_cipher42",
-    "cyberSynth_6fOHXU", "runner948PQy5j", "phaserP9m86nK", "SignalkYLRH9QXM2wpi", "HyperWizard9nOD",
-    "modernz5vx", "hyperAvatar85qgyvxUK", "Protocol97Kd", "futuristic_circuit4j", "Robotic_circuit6y",
-    "Roboticvortex_4wv", "operator50bOsQ", "quantum7pNnxqrrOc", "DigitalBotA3", "ElectricSystem4fwpmT",
-    "modern_Warden46fY6", "SolarNetwork85nlz", "WaveVjUiXyoPxS", "Electric9My6", "NeonMatrixSiTN", "Wave24vr",
-    "guardian827ogK", "Rider81Q2", "xhmlqql", "rmovyyvjw", "qytxhkc", "vqlskk", "rfqyxoi", "rmkpvus",
-    "tiglwvst", "tbpguul", "rrahap", "vcnxlx", "rmiefzde", "syxwda", "szickwrji", "rneyrcnj", "tyknefdw",
-    "strjepkyc", "rnerpwwv", "tnzqxxgvj", "rmwwphqoa", "qptafyji", "rppmqwm", "plfbwfg", "rsvzupr",
-    "qybzroose", "tmzyhtpr", "rpopngwf", "vfjumhx", "suydqg", "pixngxira", "sxmurgmj", "romwpxvcs",
-    "vbjkoxro", "tcmuooge", "rhzillwj", "rctovxade", "qtkkggk", "tgolkuj", "tubwropub", "tcooxsrl",
-    "trxpoidht", "rnwgdpj", "tsiuqbd", "qvzcyltx", "tchzwbw", "rtqiqmmww", "tlmipe", "qzvglmfn",
-    "tirymmjaz", "tbluvvxlw", "sxrosd", "qveksvual", "vmrmmyoz", "tbwufgzu", "qtlwtmaa", "rhekupu",
-    "qtjnjzynj", "telctyyy", "qxqmrhudk", "svucbf", "uamdbzq", "uxvgydks", "qthyjwua", "rkgkvgg",
-    "tgxpxzlqs", "rlnozmc", "sysajqa", "qvubugbkj", "rkrxigdcx", "rjdvvn", "uatzkypav", "tabvuvrr",
-    "rqckxzd", "rkxxiyzhd", "qxhhihenq", "qsebdr", "rrfgksv", "rlphlbl", "rmsboczt", "ttnzqy", "qyeely",
-    "qukpbhpnu", "qmzbkjlq", "qngbhb", "rteujrxsz", "tkwqvg", "stvmfrfjc", "svjtag", "svkwcvcxw",
-    "timenfa", "rlpscc", "quoileavi", "sykeoeysy", "qsxmswuro", "rqlesrnjt", "ttndbewh", "qyitnuh",
-    "taelrcr", "rapmln", "qlvtzlqn", "pfspumh", "velfbg", "teaopwl", "rdchnhvdw", "pijghuwou",
-    "qyhftmi", "rcxnspfx", "qnzungjqs", "qvxfqnu", "otwntpjc", "phzwwpajg", "quaqgzt", "qzkqmoj",
-    "rtmidedq", "phmtpham", "vlwzbkw", "quzchbh", "tpkbcll", "tinzrsw", "ovfekz", "qtatjgdhr",
-    "ovjtsc", "ouefvfzk", "okdqmkqlq", "qplnevvc", "oycqdpb", "qwqhigntp", "piqeajab", "tsvtnuk",
-    "rmbnhtcle", "otnzndgc", "pdcekzpz", "qutogm", "swtpzzqv", "tgigqv", "qwroylemc", "swjrhti",
-    "rgokxncna", "olqkckv", "qqwrvvqm", "pifgwvfrt", "qqoqgmish", "qlrufq", "qwwerlc", "ozmreeuqw",
-    "owljbqd", "rtqcgy", "qnzbqwci", "riyqolff", "oqufljwt", "rbzwixd", "qyerekr", "pcufkwjmz",
-    "rdhprnjwn", "qkjwagqb", "qmciziuyp", "qohkbwcef", "qsebevca", "rfqqzzxy", "phgcqji", "pdbmrnsuh",
-    "pjoujlvmm", "rdeewhr", "osjtmt", "oyggxtcdh", "qnzethhh", "oqlbtjsnz", "qkmghwz", "olrapfmgg",
-    "tcqfsy", "oheaiqhf", "owxuudjt", "qrsnrlov", "onvkuu", "rburyvm", "ovvozdmi", "orbbrqagr",
-    "pmccoob", "qrjppkpef", "oqsahsli", "swqivta", "ohpryzn", "pbnucvhlx", "oulcdasn", "sydxphd",
-    "pjgtvi", "regawtkx", "oypawwb", "oosvmwla", "qypitr", "szwecf", "oopuznmnu", "qrnsuhxy",
-    "ouwesihoo", "ohttotv", "pbhaqsm", "sugqbhftn", "qvwplf", "ohhntx", "osmdiadkt", "qybjemm",
-    "oobilvt", "pbsjtyeg", "qoxesfamz", "ssnpfndg", "oxadfpnlg", "ownmkz", "qxtrvarn", "rgtlaz",
-    "rdgutqm", "qloozkqn", "ragfzsze", "okrbprvbe", "mzmkduuma", "ogqookwxc", "onzrwtqw", "pgummvu",
-    "oxnwjrcd", "oxhgiwlz", "oxolrlc", "nbhoplkhz", "ohtrbuoav", "ojbqxyp", "oklluez", "osupnt",
-    "pajwjektd", "qlflwvd", "ohtdzbl", "qvgaak", "mzzdxuixr", "qpdhmvju", "pgsvffwhf", "rbepwyljl",
-    "plyatr", "pbkpnn", "ohtvfcodt", "qofhvz", "pdnvgxgy", "pkybqp", "msxabuifo", "pjhoxyijd",
-    "mxewsof", "qpenkf", "pamjmmzoz", "pbsewpmwl", "qpvefv", "qzvnrteo", "qwgxslao", "peavxdn",
-    "osvdcgd", "mzvrwg", "olfdwsde", "oorytfb", "pbrcgj", "oolklatj", "rfshnboh", "orzyxe",
-    "mwtifm", "mxbvomkb", "oqacea", "onzgmgc", "mrflpkls", "mzppilzb", "rjtqxm", "olhqspxpn",
-    "rhwindp", "pbuike", "oxkwvh", "omblxfjax", "qotvfujw", "omcikw", "pbmoglx", "pcmextcy",
-    "rslllx", "qllsxi", "qodssqf", "mssgenfz", "mrkwnph", "mucubujdj", "rqzjsvwoe", "ocwclwkhb",
-    "ohtrhsht", "mtjesvsdv", "oopscwj", "oxmdeir", "onykdsmuw", "ojqikfq", "pftvwahwy", "mnlojwk",
-    "mlvidfaox", "mqwcqcth", "mvdchka", "mtqzds", "mjqkfa", "qqqqjaph", "mprmrzr", "mwmrvie",
-    "qusfelvy", "mpmpwnws", "ovgbroi", "mxgcfjs", "mhehuozc", "ofntmbzqu", "mqnkkgl", "meunemcc",
-    "mgcysi", "oqjfyzba", "rjrpiahdu", "pkegxs", "otkkiu", "mounjtv", "mfuznydbj", "naelmpgvp",
-    "mowxdh", "mpkezbk", "mfwnvq", "orhnezs", "mnodorerf", "mtssapj", "ogxngymd", "mkjdgq",
-    "nbptqme", "pdvybg", "vzetumb", "myzzetp", "mcxkvjjs", "ogxuwtk", "plkpsudc", "pfhupp",
-    "oxlazigx", "orylqngl"
-}
+-- ===== Utils / Services =====
+getgenv().cloneref = cloneref or function(x) return x end
+local Services = setmetatable({}, {
+    __index = function(self, Ind)
+        local ok, res = pcall(function() return game:GetService(Ind) end)
+        if ok and res then rawset(self, Ind, cloneref(res)); return res end
+        return nil
+    end
+})
+
+local Players            = Services.Players
+local RunService         = Services.RunService
+local TweenService       = Services.TweenService
+local HttpService        = Services.HttpService
+local ReplicatedStorage  = Services.ReplicatedStorage
+local Lighting           = Services.Lighting
+local TeleportService    = Services.TeleportService
+
+local LocalPlayer = Players.LocalPlayer
+repeat task.wait(5) until game:IsLoaded() and LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+workspace.FallenPartsDestroyHeight = -math.huge
+
+-- ===== Auto click PLAY / DEVICE nếu có =====
+local function pressIfHasConnections(buttonObj)
+    if not buttonObj then return end
+    for _, v in ipairs(getconnections(buttonObj.MouseButton1Click)) do
+        if v.Function then pcall(v.Function) end
+    end
+end
+
+task.spawn(function()
+    local button, deviceSelect
+    repeat
+        task.wait()
+        if not button then
+            button = PlayerGui:FindFirstChild("Join")
+                and PlayerGui.Join:FindFirstChild("Friends")
+                and PlayerGui.Join.Friends:FindFirstChild("Play")
+        end
+        if not deviceSelect then
+            deviceSelect = PlayerGui:FindFirstChild("DeviceSelect")
+        end
+    until button or deviceSelect
+
+    pressIfHasConnections(button)
+    if deviceSelect and deviceSelect:FindFirstChild("Container") then
+        local tablet = deviceSelect.Container:FindFirstChild("Tablet")
+        local tabletButton = tablet and tablet:FindFirstChild("Button")
+        pressIfHasConnections(tabletButton)
+    end
+end)
+
+-- ===== BOOST FPS (nhẹ) =====
+local function boostFPS()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/NoriCoder/gh/refs/heads/main/q"))()
+    end)
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 1
+    end
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.FogStart = 9e9
+    pcall(function() settings().Rendering.QualityLevel = 1 end)
+
+    pcall(function()
+        local gui = PlayerGui:FindFirstChild("MainGUI")
+        if gui and gui:FindChild("Game") and gui.Game:FindFirstChild("Leaderboard") then
+            gui.Game.Leaderboard.Visible = false
+        end
+    end)
+
+    for _, v in ipairs(game:GetDescendants()) do
+        task.spawn(function()
+            if v:IsA("BasePart") then
+                v.Material = Enum.Material.Plastic
+                v.Reflectance = 0
+                v.BackSurface = Enum.SurfaceType.Smooth
+                v.BottomSurface = Enum.SurfaceType.Smooth
+                v.FrontSurface = Enum.SurfaceType.Smooth
+                v.LeftSurface = Enum.SurfaceType.Smooth
+                v.RightSurface = Enum.SurfaceType.Smooth
+                v.TopSurface = Enum.SurfaceType.Smooth
+            elseif v:IsA("Decal") then
+                if not v:IsDescendantOf(PlayerGui) then v.Transparency = 1 end
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Lifetime = NumberRange.new(0)
+            elseif v:IsA("ForceField") or v:IsA("Sparkles") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Beam") then
+                v:Destroy()
+            end
+        end)
+    end
+    for _, v in ipairs(Lighting:GetDescendants()) do
+        if v:IsA("PostEffect") then v.Enabled = false end
+    end
+end
+pcall(boostFPS)
+
+-- ===== BLACKSCREEN + HUD (On/Off) =====
+task.spawn(function()
+    if not getgenv().Config.BlackScreen then return end
+
+    local BlankScreen = PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", PlayerGui)
+    BlankScreen.Name = "Blank"
+    BlankScreen.ResetOnSpawn = false
+    BlankScreen.DisplayOrder = 10000
+    BlankScreen.IgnoreGuiInset = true
+
+    local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
+    Black.Name = "Black Screen"
+    Black.Size = UDim2.new(1, 0, 1, 0)
+    Black.BackgroundColor3 = Color3.new(0, 0, 0)
+    Black.ZIndex = 9999
+    Black.Visible = true
+    getgenv()._BLACKFRAME = Black
+
+    local toggleButton = BlankScreen:FindFirstChild("HUDToggle") or Instance.new("TextButton", BlankScreen)
+    toggleButton.Name = "HUDToggle"
+    toggleButton.Size = UDim2.new(0.18, 0, 0.06, 0)
+    toggleButton.Position = UDim2.new(0.5, 0, 0.02, 0)
+    toggleButton.AnchorPoint = Vector2.new(0.5, 0)
+    toggleButton.BackgroundColor3 = Color3.new(1, 1, 1)
+    toggleButton.TextColor3 = Color3.new(0, 0, 0)
+    toggleButton.Text = "On/Off Blackscreen"
+    toggleButton.Font = Enum.Font.GothamBold
+    toggleButton.TextScaled = true
+    toggleButton.ZIndex = 10001
+
+    local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui", BlankScreen)
+    screenGui.Name = "FullscreenTextDisplay"
+    screenGui.ResetOnSpawn = false
+    screenGui.IgnoreGuiInset = true
+    screenGui.DisplayOrder = 10001
+
+    local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel", screenGui)
+    timeLabel.Name = "TimeLabel"
+    timeLabel.Size = UDim2.new(1, 0, 0.12, 0)
+    timeLabel.Position = UDim2.new(0, 0, 0.22, 0)
+    timeLabel.BackgroundTransparency = 1
+    timeLabel.TextColor3 = Color3.new(1, 1, 1)
+    timeLabel.TextStrokeTransparency = 0.5
+    timeLabel.Font = Enum.Font.GothamBold
+    timeLabel.TextScaled = true
+    timeLabel.TextWrapped = true
+    timeLabel.ZIndex = 10002
+    timeLabel.Text = "Time: 00:00:00"
+
+    local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel", screenGui)
+    middleLabel.Name = "MiddleLabel"
+    middleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+    middleLabel.Position = UDim2.new(0, 0, 0.40, 0)
+    middleLabel.BackgroundTransparency = 1
+    middleLabel.TextColor3 = Color3.new(1, 1, 1)
+    middleLabel.TextStrokeTransparency = 0.5
+    middleLabel.Font = Enum.Font.GothamBold
+    middleLabel.TextScaled = true
+    middleLabel.TextWrapped = true
+    middleLabel.ZIndex = 10002
+    middleLabel.Text = "Candy : 0"
+
+    local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel", screenGui)
+    countLabel.Name = "CountLabel"
+    countLabel.Size = UDim2.new(1, 0, 0.18, 0)
+    countLabel.Position = UDim2.new(0, 0, 0.55, 0)
+    countLabel.BackgroundTransparency = 1
+    countLabel.TextColor3 = Color3.new(1, 1, 1)
+    countLabel.TextStrokeTransparency = 0.5
+    countLabel.Font = Enum.Font.GothamBold
+    countLabel.TextScaled = true
+    countLabel.TextWrapped = true
+    countLabel.ZIndex = 10002
+    countLabel.Text = "+0"
+
+    local isVisible = true
+    toggleButton.MouseButton1Click:Connect(function()
+        isVisible = not isVisible
+        Black.Visible = isVisible
+        timeLabel.Visible = isVisible
+        middleLabel.Visible = isVisible
+        countLabel.Visible = isVisible
+    end)
+
+    -- Nguồn token trên UI sự kiện
+    local function waitSource()
+        local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
+            :WaitForChild("CrossPlatform")
+            :WaitForChild("CurrentEventFrame")
+            :WaitForChild("Container")
+            :WaitForChild("EventFrames")
+            :WaitForChild("BattlePass")
+            :WaitForChild("Info")
+            :WaitForChild("Tokens")
+            :WaitForChild("Container")
+        return gui:WaitForChild("TextLabel")
+    end
+    local ok, sourceLabel = pcall(waitSource)
+    if ok and sourceLabel then
+        local function digits(str) return (str or ""):gsub("[%D]", "") end
+        middleLabel.Text = "Candy : " .. (sourceLabel.Text or "0")
+        sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
+            middleLabel.Text = "Candy : " .. (sourceLabel.Text or "0")
+            local n = tonumber(digits(sourceLabel.Text)) or 0
+            if n >= 90000 then
+                pcall(function() getgenv()._BLACKFRAME.BackgroundColor3 = Color3.fromRGB(0, 255, 0) end)
+            end
+        end)
+    else
+        warn("[HUD] Không tìm thấy nguồn TextLabel Tokens.")
+    end
+
+    -- Đếm +N theo CoinCollectedEvent (hiển thị)
+    local CoinCollectedEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Gameplay"):WaitForChild("CoinCollected")
+    local totalCount = 0
+    CoinCollectedEvent.OnClientEvent:Connect(function()
+        totalCount += 1
+        countLabel.Text = "+" .. tostring(totalCount)
+    end)
+
+    -- Đồng hồ
+    local startTime = tick()
+    task.spawn(function()
+        while screenGui and screenGui.Parent do
+            task.wait(1)
+            local elapsed = math.floor(tick() - startTime)
+            local h = math.floor(elapsed / 3600)
+            local m = math.floor((elapsed % 3600) / 60)
+            local s = elapsed % 60
+            timeLabel.Text = string.format("Time: %02d:%02d:%02d", h, m, s)
+        end
+    end)
+end)
+
+-- ===== Inventory Godly/Chroma → Black xanh =====
+task.spawn(function()
+    repeat task.wait(0.5) until rawget(getgenv(), "_BLACKFRAME")
+    local function getWeaponsDB()
+        local ok, db = pcall(function() return require(ReplicatedStorage.Database.Sync) end)
+        return ok and db and db.Weapons or nil
+    end
+    local function hasGodlyOrChromaIn(t, weaponsDB)
+        if type(t) ~= "table" or type(weaponsDB) ~= "table" then return false end
+        for k, v in pairs(t) do
+            local name = (type(k) == "string" and k) or (type(v) == "table" and (v.ItemName or v.Name))
+            if name and weaponsDB[name] then
+                local meta = weaponsDB[name]
+                if meta and (meta.Rarity == "Godly" or meta.Chroma) then return true end
+            end
+            if type(v) == "table" and hasGodlyOrChromaIn(v, weaponsDB) then return true end
+        end
+        return false
+    end
+    local function inventoryHasGodlyOrChroma()
+        local okPD, pd = pcall(function() return require(ReplicatedStorage.Modules.ProfileData) end)
+        if not okPD or not pd then return false end
+        local weaponsDB = getWeaponsDB(); if not weaponsDB then return false end
+        return hasGodlyOrChromaIn(pd, weaponsDB)
+    end
+    while task.wait(5) do
+        local ok, has = pcall(inventoryHasGodlyOrChroma)
+        if ok and has then
+            local frame = rawget(getgenv(), "_BLACKFRAME")
+            if frame then pcall(function() frame.BackgroundColor3 = Color3.fromRGB(0,255,0) end) end
+            break
+        end
+    end
+end)
+
+-- ===== Anti-AFK + FPS cap =====
+LocalPlayer.Idled:Connect(function()
+    game:GetService("VirtualUser"):CaptureController()
+    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+end)
+pcall(function() setfpscap(getgenv().Config.FPS or 0) end)
+
+-- ===== CreateFloatPlatform + noclip =====
+local floatName = "FloatPlatform"
+local function getRoot(char) return char and char:FindFirstChild("HumanoidRootPart") end
+
+local FloatingFunc, floatDied, Noclipping
+local function onnoclip()
+    if Noclipping then return end
+    Noclipping = RunService.Stepped:Connect(function()
+        local ch = LocalPlayer.Character
+        if not ch then return end
+        for _, child in pairs(ch:GetDescendants()) do
+            if child:IsA("BasePart") and child.CanCollide == true and child.Name ~= floatName then
+                child.CanCollide = false
+            end
+        end
+    end)
+end
+
+local function CreateFloatPlatform()
+    pcall(function()
+        local pchar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        if pchar:FindFirstChild(floatName) then return end
+        onnoclip()
+        task.spawn(function()
+            local Float = Instance.new("Part")
+            Float.Name = floatName
+            Float.Parent = pchar
+            Float.Transparency = 1
+            Float.Size = Vector3.new(2, 0.2, 1.5)
+            Float.Anchored = true
+            local FloatValue = -2.8
+            local root = getRoot(pchar); if not root then return end
+            Float.CFrame = root.CFrame * CFrame.new(0, FloatValue, 0)
+
+            local function Cleanup()
+                if FloatingFunc then FloatingFunc:Disconnect() end
+                if floatDied    then floatDied:Disconnect() end
+                pcall(function() Float:Destroy() end)
+            end
+            floatDied = pchar:FindFirstChildOfClass("Humanoid").Died:Connect(Cleanup)
+            FloatingFunc = RunService.Heartbeat:Connect(function()
+                local r = getRoot(pchar)
+                if r and Float and Float.Parent then
+                    Float.CFrame = r.CFrame * CFrame.new(0, FloatValue, 0)
+                else
+                    Cleanup()
+                end
+            end)
+        end)
+    end)
+end
+
+-- ===== HOP/REJOIN helper (ƯU TIÊN SERVER ĐÔNG NGƯỜI) =====
+local function TryTeleport(placeId, jobId)
+    local ok, err = pcall(function()
+        if jobId then
+            TeleportService:TeleportToPlaceInstance(placeId, jobId, LocalPlayer)
+        else
+            TeleportService:Teleport(placeId, LocalPlayer)
+        end
+    end)
+    if not ok and err then warn("[Teleport] " .. tostring(err)) end
+    return ok
+end
+
+local function HopOncePreferCrowded()
+    local placeId = game.PlaceId
+    local currentJob = game.JobId
+    local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(placeId)
+    local cursor = nil
+    for _ = 1, 3 do
+        local fullUrl = url .. (cursor and ("&cursor=" .. cursor) or "")
+        local res = nil
+        pcall(function()
+            res = request({ Url = fullUrl, Method = "GET", Headers = {["Content-Type"]="application/json"} })
+        end)
+        if res and res.StatusCode == 200 then
+            local data = nil
+            pcall(function() data = HttpService:JSONDecode(res.Body) end)
+            if data and data.data and #data.data > 0 then
+                local candidates = {}
+                for _, srv in ipairs(data.data) do
+                    if srv.playing < srv.maxPlayers and srv.id ~= currentJob then
+                        table.insert(candidates, srv)
+                    end
+                end
+                if #candidates > 0 then
+                    table.sort(candidates, function(a, b) -- ƯU TIÊN ĐÔNG NGƯỜI
+                        return a.playing > b.playing
+                    end)
+                    local chosen = candidates[1]
+                    if chosen then return TryTeleport(placeId, chosen.id) end
+                end
+                cursor = data.nextPageCursor
+                if not cursor then break end
+            else break end
+        else break end
+    end
+    return TryTeleport(placeId, nil)
+end
+
+local function HopServerLoopPreferCrowded()
+    local placeId = game.PlaceId
+    local startJob = game.JobId
+    warn("[Hop] Bắt đầu hop/rejoin vòng lặp (ưu tiên server đông người) cho tới khi đổi server...")
+
+    while true do
+        HopOncePreferCrowded()
+        local t0 = tick()
+        repeat task.wait(0.5) until game.JobId ~= startJob or (tick() - t0) > 20
+        if game.JobId ~= startJob then
+            warn("[Hop] Đã sang server mới: " .. tostring(game.JobId))
+            break
+        end
+        task.wait(2)
+        TryTeleport(placeId, nil)
+        local t1 = tick()
+        repeat task.wait(0.5) until game.JobId ~= startJob or (tick() - t1) > 20
+        if game.JobId ~= startJob then
+            warn("[Hop] Đã rejoin sang server mới: " .. tostring(game.JobId))
+            break
+        end
+        task.wait(2)
+    end
+    return true
+end
+
+-- ===== Hop khi FULL BAG (UI CoinBags) =====
+do
+    local function isFullCandy()
+        local ok, gui = pcall(function() return PlayerGui.MainGUI.Game.CoinBags.Container.Candy end)
+        if not ok or not gui or not gui.Visible then return false end
+
+        local icon = gui:FindFirstChild("FullBagIcon")
+        local iconOn = false
+        if icon then
+            local ok2 = pcall(function() iconOn = icon.Visible and ((icon.ImageTransparency or 0) < 1) end)
+            if not ok2 then iconOn = false end
+        end
+
+        local node = gui:FindFirstChild("Full")
+        local nodeOn = false
+        if node then
+            if node:IsA("TextLabel") or node:IsA("TextButton") then
+                nodeOn = node.Visible and ((node.Text or ""):lower():find("full") ~= nil)
+            elseif node:IsA("ImageLabel") or node:IsA("ImageButton") then
+                nodeOn = node.Visible and ((node.ImageTransparency or 0) < 1)
+            else
+                nodeOn = node.Visible
+            end
+        end
+        return iconOn or nodeOn
+    end
+
+    task.spawn(function()
+        while task.wait(1) do
+            if getgenv().Config.HopWhenFullBag then
+                local ok, full = pcall(isFullCandy)
+                if ok and full then
+                    warn("[Candy] Full bag → Hop/Rejoin (ưu tiên đông người)...")
+                    HopServerLoopPreferCrowded()
+                    break
+                end
+            end
+        end
+    end)
+end
+
+-- ===== HOP_5m: 5 phút không tăng token → hop (KHÔNG kick) =====
+local function cleanToken(text) return (text or ""):gsub(",", "") end
+task.spawn(function()
+    local ok, tokenLabel = pcall(function()
+        return PlayerGui
+            :WaitForChild("CrossPlatform")
+            :WaitForChild("CurrentEventFrame")
+            :WaitForChild("Container")
+            :WaitForChild("EventFrames")
+            :WaitForChild("BattlePass")
+            :WaitForChild("Info")
+            :WaitForChild("Tokens")
+            :WaitForChild("Container")
+            :WaitForChild("TextLabel")
+    end)
+    if not ok or not tokenLabel then return end
+
+    local lastValue = cleanToken(tokenLabel.Text)
+    local lastChangeTime = tick()
+    tokenLabel:GetPropertyChangedSignal("Text"):Connect(function()
+        local currentValue = cleanToken(tokenLabel.Text)
+        if currentValue ~= lastValue then
+            lastValue = currentValue
+            lastChangeTime = tick()
+        end
+    end)
+
+    while task.wait(60) do
+        if getgenv().Config.Hop_5m and (tick() - lastChangeTime) >= 300 then
+            warn("[Hop_5m] 5 phút không tăng token → Hop/Rejoin (ưu tiên đông người)...")
+            HopServerLoopPreferCrowded()
+            break
+        end
+    end
+end)
+
+-- ===== TWEEN nhặt coins từ CoinContainer (TP kiểu TWEEN gốc) =====
+local Player = Players.LocalPlayer
+
+local LOOP_DELAY = 0.2
+local TOUCH_DELAY = 0.2
+local RADIUS = 120
+
+local Character = Player.Character or Player.CharacterAdded:Wait()
+Character:WaitForChild("Humanoid")
+local HRP = Character:WaitForChild("HumanoidRootPart")
+
+Player.CharacterAdded:Connect(function(c)
+    Character = c
+    HRP = c:WaitForChild("HumanoidRootPart")
+end)
+
+local noclip
+local function setNoclip(on)
+    if on then
+        if noclip then return end
+        noclip = RunService.Stepped:Connect(function()
+            if Character then
+                for _, p in ipairs(Character:GetDescendants()) do
+                    if p:IsA("BasePart") then p.CanCollide = false end
+                end
+            end
+        end)
+    else
+        if noclip then noclip:Disconnect() noclip = nil end
+    end
+end
+
+local function findContainer()
+    for _, v in ipairs(workspace:GetChildren()) do
+        if v:IsA("Model") then
+            local c = v:FindFirstChild("CoinContainer")
+            if c then return c end
+        end
+    end
+end
+
+local function getCoins(c)
+    local list = {}
+    if not c then return list end
+    for _, d in ipairs(c:GetDescendants()) do
+        if d:IsA("BasePart") and d.Name == "Coin_Server" then
+            if d:FindFirstChildOfClass("TouchTransmitter") or d:FindFirstChild("TouchInterest") then
+                table.insert(list, d)
+            end
+        end
+    end
+    return list
+end
+
+local function nearestCoin(pos, coins)
+    local best, dist = nil, math.huge
+    for _, c in ipairs(coins) do
+        if c and c.Parent then
+            local d = (pos - c.Position).Magnitude
+            if d < dist then best, dist = c, d end
+        end
+    end
+    if not best or dist > RADIUS then return nil end
+    return best
+end
+
+-- >>> TWEEN CHUẨN: thời gian = quãng đường / Farm_Delay (coi Farm_Delay là “tốc độ”)
+local function tweenTo(pos, coin)
+    if not (HRP and HRP.Parent) then return end
+    local d = (HRP.Position - pos).Magnitude
+    local spd = tonumber(getgenv().Config.Farm_Delay) or 32
+    if spd <= 0 then spd = 32 end
+    local t = d / spd
+    local tw = TweenService:Create(HRP, TweenInfo.new(t, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
+
+    local gone = false
+    local conn = coin and coin.AncestryChanged:Connect(function(_, p)
+        if not p then gone = true tw:Cancel() end
+    end)
+
+    setNoclip(true)
+    pcall(function() tw:Play() end)
+
+    local done = false
+    tw.Completed:Connect(function() done = true end)
+    local s = os.clock()
+    while not done do
+        if gone or not HRP.Parent or os.clock() - s > t + 1 then
+            tw:Cancel()
+            break
+        end
+        RunService.Heartbeat:Wait()
+    end
+
+    if conn then conn:Disconnect() end
+    setNoclip(false)
+end
+-- <<< END TWEEN
+
+task.spawn(function()
+    while task.wait(LOOP_DELAY) do
+        if not (HRP and HRP.Parent) then
+            if Player.Character then HRP = Player.Character:FindFirstChild("HumanoidRootPart") else continue end
+        end
+        local cont = findContainer(); if not cont then continue end
+        local coins = getCoins(cont); if #coins == 0 then continue end
+        local coin = nearestCoin(HRP.Position, coins); if not coin then continue end
+        tweenTo(coin.Position, coin)
+        task.wait(TOUCH_DELAY)
+    end
+end)
+
+-- ===== ANTI-STUCK fallback: token không tăng lâu → rejoin =====
+task.spawn(function()
+    local ok, DataPlayer = pcall(function() return require(ReplicatedStorage.Modules.ProfileData) end)
+    if not ok or not DataPlayer then return end
+    local last = tonumber((DataPlayer.Materials.Owned.Candies2025) or 0)
+    while task.wait(300) do
+        pcall(function()
+            local cur = tonumber((DataPlayer.Materials.Owned.Candies2025) or 0)
+            if cur > last then
+                last = cur
+            else
+                LocalPlayer:Kick("Server Error")
+                TeleportService:Teleport(game.PlaceId, LocalPlayer)
+            end
+        end)
+    end
+end)
+
+-- ===== OPEN CRATE (đã FIX: bỏ phụ thuộc EventData, dùng ProfileData + args cố định) + Webhook =====
+local function getimage(id)
+    local ok, response = pcall(function()
+        return request({
+            Url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. tostring(id) ..
+                  "&returnPolicy=PlaceHolder&size=420x420&format=webp",
+            Method = 'GET',
+            Headers = { ["Content-Type"] = "application/json" }
+        })
+    end)
+    if ok and response and response.StatusCode == 200 then
+        local bodyOk, body = pcall(function() return HttpService:JSONDecode(response.Body) end)
+        if bodyOk and body and body.data and #body.data > 0 then
+            return body.data[1].imageUrl
+        end
+    end
+end
+
+task.spawn(function()
+    local Sync = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"))
+    local weaponsDB = Sync and Sync.Weapons or {}
+    local playerName = Players.LocalPlayer.Name
+
+    local function sendwh(item)
+        local data = weaponsDB[item]
+        if not data then return end
+        local isGodly  = (data.Rarity == "Godly")
+        local isChroma = data.Chroma or false
+        if not (isGodly or isChroma) then return end
+
+        local mention = ""
+        local id = tostring(getgenv().Config.DISCORD_ID or "")
+        if id ~= "" then mention = "<@" .. id .. "> " end
+
+        local title = isChroma and (mention .. "Found: " .. data.ItemName .. " (Chroma)")
+                           or (mention .. "Found: " .. data.ItemName)
+
+        local embed = {
+            ["title"] = "MM2",
+            ["color"] = 0x09FFF8,
+            ["footer"] = { ["text"] = getgenv().Config.WEBHOOK_NOTE or "No Note" },
+            ["fields"] = {
+                { ["name"] = "Username", ["value"] = "```" .. playerName .. "```" },
+                { ["name"] = "Item:",    ["value"] = "```\n" .. tostring(data.ItemName) .. "```" },
+                { ["name"] = "Rarity:",  ["value"] = "```\n" .. tostring(data.Rarity) .. "```" },
+            },
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+            ["thumbnail"] = { ["url"] = getimage(data.ItemID) }
+        }
+
+        pcall(function()
+            request({
+                Url = tostring(getgenv().Config.WEBHOOK_URL or ""),
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode({
+                    username = "MM2",
+                    content  = title,
+                    embeds   = { embed }
+                })
+            })
+        end)
+    end
+
+    -- ✅ BỎ EventData. Chỉ cần đủ Candies2025 >= 800 là mở crate với args cố định
+    local PROF_OK, ProfileData = pcall(function()
+        return require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData"))
+    end)
+    if not PROF_OK or not ProfileData then return end
+
+    local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+    local Shop = Remotes:WaitForChild("Shop")
+    local OpenCrate = Shop:WaitForChild("OpenCrate")
+
+    local BOX_TYPE  = "Halloween2025Box"
+    local CURRENCY  = "Candies2025"
+    local ARGS      = { BOX_TYPE, "MysteryBox", CURRENCY } -- theo yêu cầu của bạn
+
+    while task.wait(1) do
+        if not getgenv().Config.OpenCrate then continue end
+
+        local have = 0
+        pcall(function()
+            have = math.floor(tonumber(ProfileData.Materials.Owned[CURRENCY] or 0))
+        end)
+
+        if have >= 800 then
+            local okInvoke, result = pcall(function()
+                return OpenCrate:InvokeServer(unpack(ARGS))
+            end)
+            if okInvoke and result then
+                print("Crate Result:", result)
+                pcall(sendwh, result)
+            end
+        end
+    end
+end)
+
+-- ===== Retry teleport khi lỗi =====
+TeleportService.TeleportInitFailed:Connect(function(_, teleportResult, errorMessage)
+    warn("TeleportInitFailed:", teleportResult, errorMessage)
+    task.spawn(function()
+        for _ = 1, 5 do
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+            task.wait(3)
+        end
+    end)
+end)
