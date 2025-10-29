@@ -3,7 +3,7 @@ local USE_NEW_TP = true
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 print("Loading...")
 
--- Auto click nút vào game
+-- Auto click vào game
 while task.wait() do
     local player = game:GetService("Players").LocalPlayer
     local pg = player:FindFirstChild("PlayerGui")
@@ -14,662 +14,407 @@ while task.wait() do
     local playButton = pg and pg:FindFirstChild("Join")
                     and pg.Join:FindFirstChild("Friends")
                     and pg.Join.Friends:FindFirstChild("Play")
-
     if button then
-        for _, v in ipairs(getconnections(button.MouseButton1Click)) do
-            if v.Function then v.Function() end
-        end
+        for _, v in ipairs(getconnections(button.MouseButton1Click)) do if v.Function then v.Function() end end
     elseif playButton then
-        for _, v in ipairs(getconnections(playButton.MouseButton1Click)) do
-            if v.Function then v.Function() end
-        end
+        for _, v in ipairs(getconnections(playButton.MouseButton1Click)) do if v.Function then v.Function() end end
     end
-    if not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Loading") then
-        break
-    end
+    if not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Loading") then break end
 end
 
 print("Loaded")
 
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
+local Players=game:GetService("Players")
+local Player=Players.LocalPlayer
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local HttpService=game:GetService("HttpService")
+local RunService=game:GetService("RunService")
+local TeleportService=game:GetService("TeleportService")
 
-local CoinCollectedEvent = ReplicatedStorage.Remotes.Gameplay.CoinCollected
-local RoundStartEvent    = ReplicatedStorage.Remotes.Gameplay.RoundStart
-local RoundEndEvent      = ReplicatedStorage.Remotes.Gameplay.RoundEndFade
+local CoinCollectedEvent=ReplicatedStorage.Remotes.Gameplay.CoinCollected
+local RoundStartEvent=ReplicatedStorage.Remotes.Gameplay.RoundStart
+local RoundEndEvent=ReplicatedStorage.Remotes.Gameplay.RoundEndFade
 
--- Chống AFK + FPS lock
+-- Anti AFK + FPS
 Player.Idled:Connect(function()
     game:GetService("VirtualUser"):CaptureController()
     game:GetService("VirtualUser"):ClickButton2(Vector2.new())
 end)
-if getgenv().config and getgenv().config["LockFPS"] then
-    pcall(function() setfpscap(getgenv().config["NumberFPS"]) end)
-end
+if getgenv().config and getgenv().config["LockFPS"] then pcall(function() setfpscap(getgenv().config["NumberFPS"]) end) end
 
--- ====== HOP SERVER / REJOIN ======
-local _isHopping = false
+-- ===== Teleport utils =====
+local _isHopping=false
 local function TryTeleport(placeId, jobId)
-    local ok, err = pcall(function()
-        if jobId then
-            TeleportService:TeleportToPlaceInstance(placeId, jobId, Player)
-        else
-            TeleportService:Teleport(placeId, Player)
-        end
+    local ok,err=pcall(function()
+        if jobId then TeleportService:TeleportToPlaceInstance(placeId, jobId, Player)
+        else TeleportService:Teleport(placeId, Player) end
     end)
-    if not ok and err then warn("[Teleport] " .. tostring(err)) end
+    if not ok and err then warn("[Teleport] "..tostring(err)) end
     return ok
 end
 
 local function HopServer(preferLowPop)
     if _isHopping then return true end
-    _isHopping = true
-    local placeId = game.PlaceId
-    local currentJob = game.JobId
-    local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(placeId)
-    local tried, cursor = 0, nil
-    while tried < 8 do
-        tried += 1
-        local fullUrl = url .. (cursor and ("&cursor=" .. cursor) or "")
-        local res = nil
-        pcall(function()
-            res = request({
-                Url = fullUrl,
-                Method = "GET",
-                Headers = {["Content-Type"] = "application/json"}
-            })
-        end)
-        if res and res.StatusCode == 200 then
-            local data = nil
-            pcall(function() data = HttpService:JSONDecode(res.Body) end)
-            if data and data.data and #data.data > 0 then
-                local candidates = {}
-                for _, srv in ipairs(data.data) do
-                    if srv.playing < srv.maxPlayers and srv.id ~= currentJob then
-                        table.insert(candidates, srv)
-                    end
+    _isHopping=true
+    local placeId=game.PlaceId
+    local currentJob=game.JobId
+    local url=("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(placeId)
+    local tried,cursor=0,nil
+    while tried<8 do
+        tried+=1
+        local fullUrl=url..(cursor and ("&cursor="..cursor) or "")
+        local res=nil
+        pcall(function() res=request({Url=fullUrl,Method="GET",Headers={["Content-Type"]="application/json"}}) end)
+        if res and res.StatusCode==200 then
+            local data=nil; pcall(function() data=HttpService:JSONDecode(res.Body) end)
+            if data and data.data and #data.data>0 then
+                local cands={}
+                for _,srv in ipairs(data.data) do
+                    if srv.playing<srv.maxPlayers and srv.id~=currentJob then table.insert(cands,srv) end
                 end
-                if #candidates > 0 then
-                    if preferLowPop then
-                        table.sort(candidates, function(a, b) return a.playing < b.playing end)
-                    else
-                        table.sort(candidates, function(a, b) return a.playing > b.playing end)
-                    end
-                    local chosen = candidates[1]
-                    if chosen and TryTeleport(placeId, chosen.id) then
-                        return true
-                    end
+                if #cands>0 then
+                    table.sort(cands,function(a,b) return preferLowPop and (a.playing<b.playing) or (a.playing>b.playing) end)
+                    local chosen=cands[1]
+                    if chosen and TryTeleport(placeId,chosen.id) then return true end
                 end
-                cursor = data.nextPageCursor
-                if not cursor then break end
-            else
-                break
-            end
-        else
-            break
-        end
+                cursor=data.nextPageCursor; if not cursor then break end
+            else break end
+        else break end
     end
-    -- fallback: rejoin
-    TryTeleport(placeId, nil)
-    return true
+    TryTeleport(placeId,nil); return true
 end
--- ====== HẾT HOP/REJOIN ======
+-- ===== End teleport =====
 
--- Safe part
-local AutofarmIN = true
-local bringpose = CFrame.new(math.random(-50, 50), 50, math.random(-50, 50))
-local safepart = Instance.new("Part")
-safepart.Anchored = true
-safepart.Massless = true
-safepart.Transparency = 1
-safepart.Size = Vector3.new(2048, 0.5, 2048)
-safepart.CFrame = bringpose * CFrame.new(0, -1.2, 0)
-safepart.Parent = workspace
+-- Safe pad + noclip
+local AutofarmIN=true
+local safepart=Instance.new("Part")
+safepart.Anchored=true; safepart.Massless=true; safepart.Transparency=1
+safepart.Size=Vector3.new(2048,0.5,2048)
+safepart.CFrame=CFrame.new(math.random(-50,50),48.8,math.random(-50,50))
+safepart.Parent=workspace
 
--- Noclip + Float pad
-local LocalPlayer = Players.LocalPlayer
-local floatName = "FloatPlatform"
+local LocalPlayer=Players.LocalPlayer
+local floatName="FloatPlatform"
 local function getRoot(char) return char and char:FindFirstChild("HumanoidRootPart") end
-
-local Clip, Noclipping, FloatingFunc, floatDied
+local Clip,Noclipping,FloatingFunc,floatDied
 local function onnoclip()
-    Clip = false
-    task.wait(0.1)
-    local function NoclipLoop()
-        if Clip == false and LocalPlayer.Character then
-            for _, child in pairs(LocalPlayer.Character:GetDescendants()) do
-                if child:IsA("BasePart") and child.CanCollide == true and child.Name ~= floatName then
-                    child.CanCollide = false
-                end
+    Clip=false; task.wait(0.1)
+    local function loop()
+        if Clip==false and LocalPlayer.Character then
+            for _,child in pairs(LocalPlayer.Character:GetDescendants()) do
+                if child:IsA("BasePart") and child.CanCollide==true and child.Name~=floatName then child.CanCollide=false end
             end
         end
     end
-    Noclipping = RunService.Stepped:Connect(NoclipLoop)
+    Noclipping=RunService.Stepped:Connect(loop)
 end
 
 local function CreateFloatPlatform()
     pcall(function()
-        local pchar = LocalPlayer.Character
-        if not pchar or pchar:FindFirstChild(floatName) then return end
+        local pchar=LocalPlayer.Character; if not pchar or pchar:FindFirstChild(floatName) then return end
         task.spawn(function()
-            local Float = Instance.new("Part")
-            Float.Name = floatName
-            Float.Parent = pchar
-            Float.Transparency = 1
-            Float.Size = Vector3.new(2, 0.2, 1.5)
-            Float.Anchored = true
-            local FloatValue = -2.8
-            local root = getRoot(pchar); if not root then return end
-            Float.CFrame = root.CFrame * CFrame.new(0, FloatValue, 0)
+            local Float=Instance.new("Part"); Float.Name=floatName; Float.Parent=pchar
+            Float.Transparency=1; Float.Size=Vector3.new(2,0.2,1.5); Float.Anchored=true
+            local FloatValue=-2.8; local root=getRoot(pchar); if not root then return end
+            Float.CFrame=root.CFrame*CFrame.new(0,FloatValue,0)
             local function Cleanup()
                 if FloatingFunc then FloatingFunc:Disconnect() end
-                AutofarmIN = false
-                Float:Destroy()
-                if floatDied then floatDied:Disconnect() end
+                AutofarmIN=false; Float:Destroy(); if floatDied then floatDied:Disconnect() end
             end
-            floatDied = pchar:FindFirstChildOfClass("Humanoid").Died:Connect(Cleanup)
-            local function FloatPadLoop()
-                local root = getRoot(pchar)
+            floatDied=pchar:FindFirstChildOfClass("Humanoid").Died:Connect(Cleanup)
+            FloatingFunc=RunService.Heartbeat:Connect(function()
+                local root=getRoot(pchar)
                 if pchar:FindFirstChild(floatName) and root then
-                    Float.CFrame = root.CFrame * CFrame.new(0, FloatValue, 0)
-                else
-                    Cleanup()
-                end
-            end
-            FloatingFunc = RunService.Heartbeat:Connect(FloatPadLoop)
+                    Float.CFrame=root.CFrame*CFrame.new(0,FloatValue,0)
+                else Cleanup() end
+            end)
         end)
     end)
 end
 
--- Đồng bộ Round cho TP mới
+-- Round sync + delete map
 RoundStartEvent.OnClientEvent:Connect(function()
-    CreateFloatPlatform()
-    AutofarmIN = true
+    CreateFloatPlatform(); AutofarmIN=true
     if getgenv().config and getgenv().config["Deletemap"]["Mapplay"] and AutofarmIN then
         pcall(function()
-            for _, v in pairs(workspace:GetChildren()) do
+            for _,v in pairs(workspace:GetChildren()) do
                 if v:FindFirstChild("Base") then
-                    v.Base:Destroy()
-                    if v:FindFirstChild("Decoration_Regular") then v.Decoration_Regular:Destroy() end
-                elseif v:FindFirstChild("Map") then
-                    v.Map:Destroy()
-                end
+                    v.Base:Destroy(); if v:FindFirstChild("Decoration_Regular") then v.Decoration_Regular:Destroy() end
+                elseif v:FindFirstChild("Map") then v.Map:Destroy() end
             end
         end)
     end
-    if _G.__rt and _G.__rt._alive then _G.__rt.RoundInProgress = true end
+    if _G.__rt and _G.__rt._alive then _G.__rt.RoundInProgress=true end
 end)
+RoundEndEvent.OnClientEvent:Connect(function() AutofarmIN=false; if _G.__rt and _G.__rt._alive then _G.__rt.RoundInProgress=false end end)
 
-RoundEndEvent.OnClientEvent:Connect(function()
-    AutofarmIN = false
-    if _G.__rt and _G.__rt._alive then _G.__rt.RoundInProgress = false end
-end)
-
--- Xoá Lobby không cần
-local keepNames = { MapVote = false }
 if getgenv().config and getgenv().config["Deletemap"]["Lobby"] and workspace:FindFirstChild("Lobby") then
-    for _, v in pairs(workspace.Lobby:GetChildren()) do
-        if not keepNames[v.Name] then v:Destroy() end
-    end
+    for _,v in pairs(workspace.Lobby:GetChildren()) do if v.Name~="MapVote" then v:Destroy() end end
 end
 
--- Tìm container coin
-local function returncoincontainer()
-    for _, v in workspace:GetChildren() do
-        if v:IsA("Model") and v:FindFirstChild("CoinContainer") then
-            return v:FindFirstChild("CoinContainer")
+-- HUD (Time / Candy / +N)
+local HUD_SourceLabel; local __coinCountForHUD=0
+do
+    local PlayerGui=Players.LocalPlayer:WaitForChild("PlayerGui")
+    local BlankScreen=PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui",PlayerGui)
+    BlankScreen.Name="Blank"; BlankScreen.ResetOnSpawn=false; BlankScreen.DisplayOrder=10000; BlankScreen.IgnoreGuiInset=true
+    local Black=BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame",BlankScreen)
+    Black.Name="Black Screen"; Black.Size=UDim2.new(1,0,1,0); Black.BackgroundColor3=Color3.new(0,0,0); Black.ZIndex=9999
+    Black.Visible=getgenv().config and getgenv().config.BlackScreen or false; getgenv()._BLACKFRAME=Black
+    local toggle=BlankScreen:FindFirstChild("HUDToggle") or Instance.new("TextButton",BlankScreen)
+    toggle.Name="HUDToggle"; toggle.Size=UDim2.new(0.12,0,0.06,0); toggle.Position=UDim2.new(0.5,0,0.02,0)
+    toggle.AnchorPoint=Vector2.new(0.5,0); toggle.BackgroundColor3=Color3.new(1,1,1); toggle.TextColor3=Color3.new(0,0,0)
+    toggle.Text="On/Off Blackscreen"; toggle.Font=Enum.Font.GothamBold; toggle.TextScaled=true; toggle.ZIndex=10001
+    local screenGui=BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui",BlankScreen)
+    screenGui.Name="FullscreenTextDisplay"; screenGui.ResetOnSpawn=false; screenGui.IgnoreGuiInset=true; screenGui.DisplayOrder=10001
+    local timeLabel=screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel",screenGui)
+    timeLabel.Name="TimeLabel"; timeLabel.Size=UDim2.new(1,0,0.12,0); timeLabel.Position=UDim2.new(0,0,0.22,0)
+    timeLabel.BackgroundTransparency=1; timeLabel.TextColor3=Color3.new(1,1,1); timeLabel.TextStrokeTransparency=0.5
+    timeLabel.Font=Enum.Font.GothamBold; timeLabel.TextScaled=true; timeLabel.TextWrapped=true; timeLabel.ZIndex=10002
+    timeLabel.Text="Time: 00:00:00"; timeLabel.Visible=Black.Visible
+    local mid=screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel",screenGui)
+    mid.Name="MiddleLabel"; mid.Size=UDim2.new(1,0,0.2,0); mid.Position=UDim2.new(0,0,0.40,0)
+    mid.BackgroundTransparency=1; mid.TextColor3=Color3.new(1,1,1); mid.TextStrokeTransparency=0.5
+    mid.Font=Enum.Font.GothamBold; mid.TextScaled=true; mid.TextWrapped=true; mid.ZIndex=10002; mid.Text="Candy : 0"; mid.Visible=Black.Visible
+    local count=screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel",screenGui)
+    count.Name="CountLabel"; count.Size=UDim2.new(1,0,0.18,0); count.Position=UDim2.new(0,0,0.55,0)
+    count.BackgroundTransparency=1; count.TextColor3=Color3.new(1,1,1); count.TextStrokeTransparency=0.5
+    count.Font=Enum.Font.GothamBold; count.TextScaled=true; count.TextWrapped=true; count.ZIndex=10002; count.Text="+0"; count.Visible=Black.Visible
+    local vis=Black.Visible
+    toggle.MouseButton1Click:Connect(function() vis=not vis; Black.Visible=vis; timeLabel.Visible=vis; mid.Visible=vis; count.Visible=vis end)
+    local function waitSource()
+        local gui=Players.LocalPlayer:WaitForChild("PlayerGui")
+            :WaitForChild("CrossPlatform"):WaitForChild("CurrentEventFrame"):WaitForChild("Container")
+            :WaitForChild("EventFrames"):WaitForChild("BattlePass"):WaitForChild("Info")
+            :WaitForChild("Tokens"):WaitForChild("Container")
+        return gui:WaitForChild("TextLabel")
+    end
+    local ok,sourceLabel=pcall(waitSource); HUD_SourceLabel=sourceLabel
+    if ok and sourceLabel then
+        local function digits(str) return (str or ""):gsub("[%D]","") end
+        mid.Text="Candy : "..(sourceLabel.Text or "0")
+        sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
+            mid.Text="Candy : "..(sourceLabel.Text or "0")
+            local n=tonumber(digits(sourceLabel.Text)) or 0
+            if n>=109200 then pcall(function() Black.BackgroundColor3=Color3.fromRGB(0,255,0) end) end
+        end)
+    else warn("[HUD] Không thấy TextLabel Tokens.") end
+    __coinCountForHUD=0
+    CoinCollectedEvent.OnClientEvent:Connect(function() __coinCountForHUD+=1; count.Text="+"..tostring(__coinCountForHUD) end)
+    local startTime=tick(); task.spawn(function()
+        while screenGui and screenGui.Parent do
+            task.wait(1)
+            local e=math.floor(tick()-startTime)
+            timeLabel.Text=string.format("Time: %02d:%02d:%02d",math.floor(e/3600),math.floor((e%3600)/60),e%60)
         end
+    end)
+end
+
+-- ============================
+-- WATCHER 5 PHÚT (ĐÃ FIX)
+-- Chỉ reset timer khi **tổng Candy thực sự tăng**.
+-- Ưu tiên đọc ProfileData -> Materials["Candies2025"]; fallback TextLabel.
+-- ============================
+local function bool(x) return x and true or false end
+local function cfgHop5m()
+    local cfg=rawget(getgenv(),"config") or {}
+    if cfg.Hop5m~=nil then return bool(cfg.Hop5m) end
+    return bool(cfg.Kick5m)
+end
+
+local function readTotalCandy()
+    -- 1) ProfileData (độ tin cậy cao)
+    local okPD, pd = pcall(function()
+        local m=ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData")
+        return require(m)
+    end)
+    if okPD and type(pd)=="table" then
+        local okVal, v = pcall(function()
+            return tonumber((pd.Materials and pd.Materials.Owned and pd.Materials.Owned["Candies2025"]) or 0)
+        end)
+        if okVal and type(v)=="number" then return math.floor(v) end
+    end
+    -- 2) Fallback từ TextLabel Tokens
+    local function digitsOnly(s) return tostring(s or ""):gsub("[%D]","") end
+    local lbl=HUD_SourceLabel
+    if (not lbl) or (not lbl.Parent) then
+        local ok,l=pcall(function()
+            return Players.LocalPlayer:WaitForChild("PlayerGui")
+                :WaitForChild("CrossPlatform"):WaitForChild("CurrentEventFrame"):WaitForChild("Container")
+                :WaitForChild("EventFrames"):WaitForChild("BattlePass"):WaitForChild("Info")
+                :WaitForChild("Tokens"):WaitForChild("Container"):WaitForChild("TextLabel")
+        end)
+        if ok then lbl=l end
+    end
+    if lbl then
+        local n=tonumber(digitsOnly(lbl.Text)) or 0
+        return n
     end
     return nil
 end
 
--- Lấy coin gần nhất (chế độ TP cũ)
-local function GetNearestValidCoin(container)
-    local character = Player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    if not character or not hrp then return nil end
-    local nearestCoin, minDistance = nil, math.huge
-    for _, coin in pairs(container:GetChildren()) do
-        if coin:GetAttribute("CoinID") == getgenv().config["CoinType"] and coin:FindFirstChild("TouchInterest") then
-            local distance = (hrp.Position - coin.Position).Magnitude
-            if distance < minDistance then
-                minDistance = distance
-                nearestCoin = coin
-            end
-        end
-    end
-    return nearestCoin
-end
-
-local function PcallTP(cf)
-    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-        Player.Character.HumanoidRootPart.CFrame = cf
-    end
-end
-
--- =========================
--- HUD MỚI (Candy tổng + Count + Toggle)
--- =========================
-local HUD_SourceLabel -- TextLabel nguồn tổng Candy (Tokens)
-local __coinCountForHUD = 0
-
-do
-    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
-
-    -- Black overlay
-    local BlankScreen = PlayerGui:FindFirstChild("Blank") or Instance.new("ScreenGui", PlayerGui)
-    BlankScreen.Name = "Blank"
-    BlankScreen.ResetOnSpawn = false
-    BlankScreen.DisplayOrder = 10000
-    BlankScreen.IgnoreGuiInset = true
-
-    local Black = BlankScreen:FindFirstChild("Black Screen") or Instance.new("Frame", BlankScreen)
-    Black.Name = "Black Screen"
-    Black.Size = UDim2.new(1, 0, 1, 0)
-    Black.BackgroundColor3 = Color3.new(0, 0, 0)
-    Black.ZIndex = 9999
-    Black.Visible = getgenv().config and getgenv().config.BlackScreen and true or false
-    getgenv()._BLACKFRAME = Black
-
-    local toggleButton = BlankScreen:FindFirstChild("HUDToggle") or Instance.new("TextButton", BlankScreen)
-    toggleButton.Name = "HUDToggle"
-    toggleButton.Size = UDim2.new(0.12, 0, 0.06, 0)
-    toggleButton.Position = UDim2.new(0.5, 0, 0.02, 0)
-    toggleButton.AnchorPoint = Vector2.new(0.5, 0)
-    toggleButton.BackgroundColor3 = Color3.new(1, 1, 1)
-    toggleButton.TextColor3 = Color3.new(0, 0, 0)
-    toggleButton.Text = "On/Off Blackscreen"
-    toggleButton.Font = Enum.Font.GothamBold
-    toggleButton.TextScaled = true
-    toggleButton.ZIndex = 10001
-
-    local screenGui = BlankScreen:FindFirstChild("FullscreenTextDisplay") or Instance.new("ScreenGui", BlankScreen)
-    screenGui.Name = "FullscreenTextDisplay"
-    screenGui.ResetOnSpawn = false
-    screenGui.IgnoreGuiInset = true
-    screenGui.DisplayOrder = 10001
-
-    local timeLabel = screenGui:FindFirstChild("TimeLabel") or Instance.new("TextLabel", screenGui)
-    timeLabel.Name = "TimeLabel"
-    timeLabel.Size = UDim2.new(1, 0, 0.12, 0)
-    timeLabel.Position = UDim2.new(0, 0, 0.22, 0)
-    timeLabel.BackgroundTransparency = 1
-    timeLabel.TextColor3 = Color3.new(1, 1, 1)
-    timeLabel.TextStrokeTransparency = 0.5
-    timeLabel.Font = Enum.Font.GothamBold
-    timeLabel.TextScaled = true
-    timeLabel.TextWrapped = true
-    timeLabel.ZIndex = 10002
-    timeLabel.Text = "Time: 00:00:00"
-    timeLabel.Visible = Black.Visible
-
-    local middleLabel = screenGui:FindFirstChild("MiddleLabel") or Instance.new("TextLabel", screenGui)
-    middleLabel.Name = "MiddleLabel"
-    middleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-    middleLabel.Position = UDim2.new(0, 0, 0.40, 0)
-    middleLabel.BackgroundTransparency = 1
-    middleLabel.TextColor3 = Color3.new(1, 1, 1)
-    middleLabel.TextStrokeTransparency = 0.5
-    middleLabel.Font = Enum.Font.GothamBold
-    middleLabel.TextScaled = true
-    middleLabel.TextWrapped = true
-    middleLabel.ZIndex = 10002
-    middleLabel.Text = "Candy : 0"
-    middleLabel.Visible = Black.Visible
-
-    local countLabel = screenGui:FindFirstChild("CountLabel") or Instance.new("TextLabel", screenGui)
-    countLabel.Name = "CountLabel"
-    countLabel.Size = UDim2.new(1, 0, 0.18, 0)
-    countLabel.Position = UDim2.new(0, 0, 0.55, 0)
-    countLabel.BackgroundTransparency = 1
-    countLabel.TextColor3 = Color3.new(1, 1, 1)
-    countLabel.TextStrokeTransparency = 0.5
-    countLabel.Font = Enum.Font.GothamBold
-    countLabel.TextScaled = true
-    countLabel.TextWrapped = true
-    countLabel.ZIndex = 10002
-    countLabel.Text = "+0"
-    countLabel.Visible = Black.Visible
-
-    local isVisible = Black.Visible
-    toggleButton.MouseButton1Click:Connect(function()
-        isVisible = not isVisible
-        Black.Visible = isVisible
-        timeLabel.Visible = isVisible
-        middleLabel.Visible = isVisible
-        countLabel.Visible = isVisible
-    end)
-
-    -- Lấy TextLabel tổng Candy (event UI)
-    local function waitSource()
-        local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
-            :WaitForChild("CrossPlatform")
-            :WaitForChild("CurrentEventFrame")
-            :WaitForChild("Container")
-            :WaitForChild("EventFrames")
-            :WaitForChild("BattlePass")
-            :WaitForChild("Info")
-            :WaitForChild("Tokens")
-            :WaitForChild("Container")
-        return gui:WaitForChild("TextLabel")
-    end
-    local ok, sourceLabel = pcall(waitSource)
-    HUD_SourceLabel = sourceLabel  -- lưu để watcher 5 phút dùng
-    if not ok or not sourceLabel then
-        warn("[HUD] Không tìm thấy nguồn TextLabel Tokens.")
-    else
-        local function digits(str) return (str or ""):gsub("[%D]", "") end
-        middleLabel.Text = "Candy : " .. (sourceLabel.Text or "0")
-        sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
-            middleLabel.Text = "Candy : " .. (sourceLabel.Text or "0")
-            local n = tonumber(digits(sourceLabel.Text)) or 0
-            if n >= 109200 then
-                pcall(function() Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0) end)
-            end
-        end)
-    end
-
-    -- Đếm +N theo CoinCollectedEvent (chỉ để hiển thị)
-    __coinCountForHUD = 0
-    CoinCollectedEvent.OnClientEvent:Connect(function()
-        __coinCountForHUD += 1
-        countLabel.Text = "+" .. tostring(__coinCountForHUD)
-    end)
-
-    -- Đồng hồ chạy
-    local startTime = tick()
-    task.spawn(function()
-        while screenGui and screenGui.Parent do
-            task.wait(1)
-            local elapsed = math.floor(tick() - startTime)
-            local h = math.floor(elapsed / 3600)
-            local m = math.floor((elapsed % 3600) / 60)
-            local s = elapsed % 60
-            timeLabel.Text = string.format("Time: %02d:%02d:%02d", h, m, s)
-        end
-    end)
-end
--- =========================
--- HẾT HUD
--- =========================
-
-----------------------------------------------------------------
--- WATCHER 5 PHÚT CHO "CANDY :" (YÊU CẦU CỦA BẠN)
--- Nếu tổng Candy (TextLabel Tokens) KHÔNG ĐỔI trong 5 phút -> HopServer(true)
--- Tương thích cờ: ưu tiên config.Hop5m; nếu không có, dùng config.Kick5m cũ.
-----------------------------------------------------------------
-local function digitsOnly(s) return tostring(s or ""):gsub("[%D]", "") end
-
 task.spawn(function()
-    -- Chờ có HUD_SourceLabel (TextLabel Tokens)
-    local tokLabel = nil
-    if HUD_SourceLabel and HUD_SourceLabel.Parent then
-        tokLabel = HUD_SourceLabel
-    else
-        -- fallback lấy trực tiếp trong UI
-        local ok, lbl = pcall(function()
-            return Players.LocalPlayer:WaitForChild("PlayerGui")
-                :WaitForChild("CrossPlatform")
-                :WaitForChild("CurrentEventFrame")
-                :WaitForChild("Container")
-                :WaitForChild("EventFrames")
-                :WaitForChild("BattlePass")
-                :WaitForChild("Info")
-                :WaitForChild("Tokens")
-                :WaitForChild("Container")
-                :WaitForChild("TextLabel")
-        end)
-        if ok then tokLabel = lbl end
+    -- nếu user tắt tính năng thì thôi
+    if not cfgHop5m() then return end
+    -- baseline
+    local lastCandy = readTotalCandy()
+    if lastCandy==nil then
+        warn("[CandyWatcher] Không đọc được tổng Candy → vẫn chạy fallback sau 5 phút không coin.")
     end
-
-    if not tokLabel then
-        warn("[CandyWatcher] Không tìm thấy TextLabel Tokens → bỏ qua watcher.")
-        return
-    end
-
-    local function cfgHop5m()
-        local cfg = rawget(getgenv(), "config") or {}
-        if cfg.Hop5m ~= nil then return cfg.Hop5m end
-        -- tương thích tên cũ Kick5m
-        return cfg.Kick5m == true
-    end
-
-    local lastCandy = digitsOnly(tokLabel.Text)
     local lastChange = tick()
+    local lastCheck  = tick()
 
-    tokLabel:GetPropertyChangedSignal("Text"):Connect(function()
-        local cur = digitsOnly(tokLabel.Text)
-        if cur ~= lastCandy then
-            lastCandy = cur
-            lastChange = tick()
+    while task.wait(10) do
+        if not cfgHop5m() then break end
+        -- Mỗi 60s kiểm tra tổng candy; chỉ reset khi **tăng**
+        if tick()-lastCheck >= 60 then
+            lastCheck = tick()
+            local cur = readTotalCandy()
+            if cur and lastCandy and cur>lastCandy then
+                lastCandy = cur
+                lastChange = tick()
+                -- print("[CandyWatcher] Candy tăng -> reset timer")
+            elseif cur and lastCandy==nil then
+                lastCandy = cur
+                lastChange = tick()
+            end
         end
-    end)
 
-    -- Cũng nghe CoinCollected để reset đồng hồ (phòng trường hợp UI delay)
-    CoinCollectedEvent.OnClientEvent:Connect(function()
-        lastChange = tick()
-    end)
-
-    while task.wait(60) do
-        if cfgHop5m() and (tick() - lastChange) >= 300 then
+        if (tick()-lastChange) >= 300 then
             warn("[CandyWatcher] 5 phút không tăng Candy → Hop/Rejoin server...")
-            HopServer(true)
-            -- Sau Teleport script reload, watcher này dừng ở phiên cũ.
+            HopServer(false)
             break
         end
     end
 end)
-----------------------------------------------------------------
--- HẾT WATCHER 5 PHÚT
-----------------------------------------------------------------
+-- ============================
+-- HẾT WATCHER 5 PHÚT (FIX)
+-- ============================
 
--- ===== OPEN CRATE (giữ nguyên logic) =====
+-- ===== OPEN CRATE (giữ nguyên) =====
 local function getimage(id)
     if not has_request then return nil end
-    local ok, response = pcall(function()
+    local ok,response=pcall(function()
         return has_request({
-            Url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. tostring(id) ..
-                  "&returnPolicy=PlaceHolder&size=420x420&format=webp",
-            Method = 'GET',
-            Headers = { ["Content-Type"] = "application/json" }
+            Url="https://thumbnails.roblox.com/v1/assets?assetIds="..tostring(id).."&returnPolicy=PlaceHolder&size=420x420&format=webp",
+            Method='GET', Headers={["Content-Type"]="application/json"}
         })
     end)
-    if ok and response and response.StatusCode == 200 then
-        local bodyOk, body = pcall(function() return HttpService:JSONDecode(response.Body) end)
-        if bodyOk and body and body.data and #body.data > 0 then
-            return body.data[1].imageUrl
-        end
+    if ok and response and response.StatusCode==200 then
+        local bodyOk,body=pcall(function() return HttpService:JSONDecode(response.Body) end)
+        if bodyOk and body and body.data and #body.data>0 then return body.data[1].imageUrl end
     end
 end
 
 task.spawn(function()
-    local okSync, Sync = pcall(function()
-        return SafeWaitDesc(ReplicatedStorage, {"Database","Sync"}, 20) and require(ReplicatedStorage.Database.Sync)
+    local okSync,Sync=pcall(function()
+        return SafeWaitDesc(ReplicatedStorage,{"Database","Sync"},20) and require(ReplicatedStorage.Database.Sync)
     end)
-    local weaponsDB = (okSync and Sync and Sync.Weapons) or {}
+    local weaponsDB=(okSync and Sync and Sync.Weapons) or {}
 
-    local playerName = Players.LocalPlayer.Name
+    local playerName=Players.LocalPlayer.Name
     local function sendwh(item)
         if not has_request then return end
-        local data = weaponsDB[item]
-        if not data then return end
-        local isGodly  = (data.Rarity == "Godly")
-        local isChroma = data.Chroma or false
+        local data=weaponsDB[item]; if not data then return end
+        local isGodly=(data.Rarity=="Godly")
+        local isChroma=data.Chroma or false
         if not (isGodly or isChroma) then return end
-
-        local mention = ""
-        local id = tostring(getgenv().Config and getgenv().Config.DISCORD_ID or "")
-        if id ~= "" then mention = "<@" .. id .. "> " end
-
-        local title = isChroma and (mention .. "Found: " .. data.ItemName .. " (Chroma)")
-                           or (mention .. "Found: " .. data.ItemName)
-
-        local embed = {
-            ["title"] = "MM2",
-            ["color"] = 0x09FFF8,
-            ["footer"] = { ["text"] = (getgenv().Config and getgenv().Config.WEBHOOK_NOTE) or "No Note" },
-            ["fields"] = {
-                { ["name"] = "Username", ["value"] = "```" .. playerName .. "```" },
-                { ["name"] = "Item:",    ["value"] = "```\n" .. tostring(data.ItemName) .. "```" },
-                { ["name"] = "Rarity:",  ["value"] = "```\n" .. tostring(data.Rarity) .. "```" },
-            },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-            ["thumbnail"] = { ["url"] = getimage(data.ItemID) }
+        local mention=""; local id=tostring(getgenv().Config and getgenv().Config.DISCORD_ID or "")
+        if id~="" then mention="<@"..id.."> " end
+        local title=isChroma and (mention.."Found: "..data.ItemName.." (Chroma)") or (mention.."Found: "..data.ItemName)
+        local embed={
+            ["title"]="MM2",["color"]=0x09FFF8,
+            ["footer"]={["text"]=(getgenv().Config and getgenv().Config.WEBHOOK_NOTE) or "No Note"},
+            ["fields"]={{["name"]="Username",["value"]="```"..playerName.."```"},
+                        {["name"]="Item:",["value"]="```\n"..tostring(data.ItemName).."```"},
+                        {["name"]="Rarity:",["value"]="```\n"..tostring(data.Rarity).."```"},},
+            ["timestamp"]=os.date("!%Y-%m-%dT%H:%M:%SZ"),
+            ["thumbnail"]={["url"]=getimage(data.ItemID)}
         }
-
         pcall(function()
             has_request({
-                Url = tostring(getgenv().Config and getgenv().Config.WEBHOOK_URL or ""),
-                Method = "POST",
-                Headers = { ["Content-Type"] = "application/json" },
-                Body = HttpService:JSONEncode({
-                    username = "MM2",
-                    content  = title,
-                    embeds   = { embed }
-                })
+                Url=tostring(getgenv().Config and getgenv().Config.WEBHOOK_URL or ""),
+                Method="POST", Headers={["Content-Type"]="application/json"},
+                Body=HttpService:JSONEncode({username="MM2",content=title,embeds={embed}})
             })
         end)
     end
 
-    local PROF_OK, ProfileData = pcall(function()
-        local m = SafeWaitDesc(ReplicatedStorage, {"Modules","ProfileData"}, 20)
+    local PROF_OK,ProfileData=pcall(function()
+        local m=SafeWaitDesc(ReplicatedStorage,{"Modules","ProfileData"},20)
         return m and require(m)
     end)
     if not PROF_OK or not ProfileData then return end
 
-    local OpenCrate = SafeWaitDesc(ReplicatedStorage, {"Remotes","Shop","OpenCrate"}, 20)
+    local OpenCrate=SafeWaitDesc(ReplicatedStorage,{"Remotes","Shop","OpenCrate"},20)
     if not (OpenCrate and OpenCrate.IsA and OpenCrate:IsA("RemoteFunction")) then return end
 
-    local BOX_TYPE  = "Halloween2025Box"
-    local CURRENCY  = "Candies2025"
-    local ARGS      = { BOX_TYPE, "MysteryBox", CURRENCY }
-
-    local lastOpen = 0
+    local BOX_TYPE="Halloween2025Box"
+    local CURRENCY="Candies2025"
+    local ARGS={BOX_TYPE,"MysteryBox",CURRENCY}
+    local lastOpen=0
     while task.wait(1) do
         if not (getgenv().Config and getgenv().Config.OpenCrate) then continue end
-        local have = 0
-        pcall(function()
-            have = math.floor(tonumber(ProfileData.Materials.Owned[CURRENCY] or 0))
-        end)
-        if have >= 800 and (os.clock() - lastOpen) > 2.5 then
-            lastOpen = os.clock()
-            local okInvoke, result = pcall(function()
-                return OpenCrate:InvokeServer(unpack(ARGS))
-            end)
-            if okInvoke and result then
-                print("Crate Result:", result)
-                pcall(sendwh, result)
-            end
+        local have=0; pcall(function() have=math.floor(tonumber(ProfileData.Materials.Owned[CURRENCY] or 0)) end)
+        if have>=800 and (os.clock()-lastOpen)>2.5 then
+            lastOpen=os.clock()
+            local okInvoke,result=pcall(function() return OpenCrate:InvokeServer(unpack(ARGS)) end)
+            if okInvoke and result then print("Crate Result:",result); pcall(sendwh,result) end
         end
     end
 end)
 
-----------------------------------------------------------------
--- CHECK FULL BAG (Candy) → HOP/REJOIN VÒNG LẶP TỚI KHI ĐỔI SERVER
-----------------------------------------------------------------
+-- ===== FULL BAG → HOP LOOP =====
 do
-    local PlayerGuiTop = Players.LocalPlayer:WaitForChild("PlayerGui")
-
+    local PlayerGuiTop=Players.LocalPlayer:WaitForChild("PlayerGui")
     local function isFullCandy()
-        local candy = PlayerGuiTop.MainGUI.Game.CoinBags.Container.Candy
+        local candy=PlayerGuiTop.MainGUI.Game.CoinBags.Container.Candy
         if not candy.Visible then return false end
-
-        local icon = candy:FindFirstChild("FullBagIcon")
-        local iconOn = false
-        if icon then
-            local ok = pcall(function() iconOn = icon.Visible and ((icon.ImageTransparency or 0) < 1) end)
-            if not ok then iconOn = false end
-        end
-
-        local node = candy:FindFirstChild("Full")
-        local nodeOn = false
+        local icon=candy:FindFirstChild("FullBagIcon"); local iconOn=false
+        if icon then local ok=pcall(function() iconOn=icon.Visible and ((icon.ImageTransparency or 0)<1) end); if not ok then iconOn=false end end
+        local node=candy:FindFirstChild("Full"); local nodeOn=false
         if node then
-            if node:IsA("TextLabel") or node:IsA("TextButton") then
-                nodeOn = node.Visible and ((node.Text or ""):lower():find("full") ~= nil)
-            elseif node:IsA("ImageLabel") or node:IsA("ImageButton") then
-                nodeOn = node.Visible and ((node.ImageTransparency or 0) < 1)
-            else
-                nodeOn = node.Visible
-            end
+            if node:IsA("TextLabel") or node:IsA("TextButton") then nodeOn=node.Visible and ((node.Text or ""):lower():find("full")~=nil)
+            elseif node:IsA("ImageLabel") or node:IsA("ImageButton") then nodeOn=node.Visible and ((node.ImageTransparency or 0)<1)
+            else nodeOn=node.Visible end
         end
-
         return iconOn or nodeOn
     end
 
     local function HopOnce(preferLowPop)
-        local placeId = game.PlaceId
-        local currentJob = game.JobId
-        local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(placeId)
-        local cursor = nil
-        for _ = 1, 3 do
-            local fullUrl = url .. (cursor and ("&cursor=" .. cursor) or "")
-            local res = nil
-            pcall(function()
-                res = request({
-                    Url = fullUrl,
-                    Method = "GET",
-                    Headers = {["Content-Type"] = "application/json"}
-                })
-            end)
-            if res and res.StatusCode == 200 then
-                local data = nil
-                pcall(function() data = HttpService:JSONDecode(res.Body) end)
-                if data and data.data and #data.data > 0 then
-                    local candidates = {}
-                    for _, srv in ipairs(data.data) do
-                        if srv.playing < srv.maxPlayers and srv.id ~= currentJob then
-                            table.insert(candidates, srv)
-                        end
+        local placeId=game.PlaceId; local currentJob=game.JobId
+        local url=("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(placeId)
+        local cursor=nil
+        for _=1,3 do
+            local fullUrl=url..(cursor and ("&cursor="..cursor) or "")
+            local res=nil; pcall(function() res=request({Url=fullUrl,Method="GET",Headers={["Content-Type"]="application/json"}}) end)
+            if res and res.StatusCode==200 then
+                local data=nil; pcall(function() data=HttpService:JSONDecode(res.Body) end)
+                if data and data.data and #data.data>0 then
+                    local cand={}
+                    for _,srv in ipairs(data.data) do if srv.playing<srv.maxPlayers and srv.id~=currentJob then table.insert(cand,srv) end end
+                    if #cand>0 then
+                        table.sort(cand,function(a,b) return preferLowPop and (a.playing<b.playing) or (a.playing>b.playing) end)
+                        local chosen=cand[1]; if chosen then return TryTeleport(placeId,chosen.id) end
                     end
-                    if #candidates > 0 then
-                        if preferLowPop then
-                            table.sort(candidates, function(a, b) return a.playing < b.playing end)
-                        else
-                            table.sort(candidates, function(a, b) return a.playing > b.playing end)
-                        end
-                        local chosen = candidates[1]
-                        if chosen then
-                            return TryTeleport(placeId, chosen.id)
-                        end
-                    end
-                    cursor = data.nextPageCursor
-                    if not cursor then break end
-                else
-                    break
-                end
-            else
-                break
-            end
+                    cursor=data.nextPageCursor; if not cursor then break end
+                else break end
+            else break end
         end
-        return TryTeleport(placeId, nil)
+        return TryTeleport(placeId,nil)
     end
 
     local function HopServerLoop()
         if not (getgenv().config and getgenv().config["HopWhenFullBag"]) then return true end
-        local placeId = game.PlaceId
-        local startJob = game.JobId
-        warn("[Hop] Bắt đầu hop/rejoin vòng lặp cho tới khi đổi server...")
-
+        local placeId=game.PlaceId; local startJob=game.JobId
+        warn("[Hop] Bắt đầu hop/rejoin vòng lặp...")
         while true do
-            HopOnce(true)
-            local t0 = tick()
-            repeat task.wait(0.5) until game.JobId ~= startJob or (tick() - t0) > 20
-            if game.JobId ~= startJob then
-                warn("[Hop] Đã sang server mới: " .. tostring(game.JobId))
-                break
-            end
-            task.wait(2)
-            TryTeleport(placeId, nil)
-            local t1 = tick()
-            repeat task.wait(0.5) until game.JobId ~= startJob or (tick() - t1) > 20
-            if game.JobId ~= startJob then
-                warn("[Hop] Đã rejoin sang server mới: " .. tostring(game.JobId))
-                break
-            end
+            HopOnce(false)
+            local t0=tick(); repeat task.wait(0.5) until game.JobId~=startJob or (tick()-t0)>20
+            if game.JobId~=startJob then warn("[Hop] Đã sang server mới: "..tostring(game.JobId)); break end
+            task.wait(2); TryTeleport(placeId,nil)
+            local t1=tick(); repeat task.wait(0.5) until game.JobId~=startJob or (tick()-t1)>20
+            if game.JobId~=startJob then warn("[Hop] Đã rejoin sang server mới: "..tostring(game.JobId)); break end
             task.wait(2)
         end
         return true
@@ -677,325 +422,172 @@ do
 
     task.spawn(function()
         while task.wait(1) do
-            local ok, full = pcall(isFullCandy)
-            local FullBag = (ok and full) and true or false
-            if FullBag and getgenv().config and getgenv().config["HopWhenFullBag"] then
-                warn("[Candy] Full bag → Bắt đầu hop/rejoin vòng lặp...")
-                HopServerLoop()
-                break
+            local ok,full=pcall(isFullCandy)
+            if (ok and full) and getgenv().config and getgenv().config["HopWhenFullBag"] then
+                warn("[Candy] Full bag → Hop/Rejoin vòng lặp...")
+                HopServerLoop(); break
             end
         end
     end)
 end
-----------------------------------------------------------------
--- HẾT PHẦN CHECK FULL CANDY → HOP (LOOP)
-----------------------------------------------------------------
+-- ===== End FULL BAG → HOP =====
 
--- =========================
--- TP MỚI Octree – chỉ chạy khi USE_NEW_TP = true
--- =========================
+-- ===== NEW TP (Octree) – giữ nguyên logic =====
 if USE_NEW_TP then
-    local Octree = loadstring(game:HttpGet("https://raw.githubusercontent.com/Sleitnick/rbxts-octo-tree/main/src/init.lua", true))()
-    local rt = {} rt.__index = rt rt.octree = Octree.new()
-    rt.RoundInProgress = false
-    rt.Players = game.Players
-    rt.player  = game.Players.LocalPlayer
-    rt.coinContainer = nil
-    rt.radius = 200
-    rt.walkspeed = 30
-    rt.touchedCoins = {}
-    rt.positionChangeConnections = setmetatable({}, { __mode = "v" })
-    rt.Added, rt.Removing, rt.UserDied = nil, nil, nil
+    local Octree=loadstring(game:HttpGet("https://raw.githubusercontent.com/Sleitnick/rbxts-octo-tree/main/src/init.lua",true))()
+    local rt={}; rt.__index=rt; rt.octree=Octree.new()
+    rt.RoundInProgress=false; rt.Players=game.Players; rt.player=game.Players.LocalPlayer
+    rt.coinContainer=nil; rt.radius=200; rt.walkspeed=30; rt.touchedCoins={}; rt.positionChangeConnections=setmetatable({},{__mode="v"})
+    rt.Added,rt.Removing,rt.UserDied=nil,nil,nil
 
-    local State = { Action="Action", StandStillWait="StandStillWait", WaitingForRound="WaitingForRound",
-                    WaitingForRoundEnd="WaitingForRoundEnd", RespawnState="RespawnState" }
-    local CurrentState = State.WaitingForRound
-    local LastPosition, BagIsFull, IsMurderer, Working = nil, false, false, false
+    local State={Action="Action",StandStillWait="StandStillWait",WaitingForRound="WaitingForRound",WaitingForRoundEnd="WaitingForRoundEnd",RespawnState="RespawnState"}
+    local CurrentState=State.WaitingForRound
+    local LastPosition,BagIsFull,IsMurderer,Working=nil,false,false,false
 
-    local okTimerPart = workspace:FindFirstChild("RoundTimerPart")
-    local ROUND_TIMER = okTimerPart and okTimerPart:FindFirstChild("SurfaceGui") and okTimerPart.SurfaceGui:FindFirstChild("Timer")
-    local PLAYER_GUI = Players.LocalPlayer:WaitForChild("PlayerGui")
-    _G.__rt = rt; _G.__rt._alive = true
+    local okTimerPart=workspace:FindFirstChild("RoundTimerPart")
+    local ROUND_TIMER=okTimerPart and okTimerPart:FindFirstChild("SurfaceGui") and okTimerPart.SurfaceGui:FindFirstChild("Timer")
+    local PLAYER_GUI=Players.LocalPlayer:WaitForChild("PlayerGui")
+    _G.__rt=rt; _G.__rt._alive=true
 
-    function rt:Message(ti, tx, tm) pcall(function() game:GetService("StarterGui"):SetCore("SendNotification", {Title=ti, Text=tx, Duration=tm}) end) end
     function rt:Character() return self.player.Character or self.player.CharacterAdded:Wait() end
-    function rt:GetCharacterLoaded() repeat task.wait(0.02) until rt:Character() ~= nil end
-    function rt:CheckIfPlayerIsInARound()
-        if not PLAYER_GUI:FindFirstChild("MainGUI") then return false end
-        local mg = PLAYER_GUI.MainGUI
-        if mg.Game and mg.Game:FindFirstChild("Timer") and mg.Game.Timer.Visible then return true end
-        if mg.Game and mg.Game:FindFirstChild("EarnedXP") and mg.Game.EarnedXP.Visible then return true end
-        return false
-    end
+    function rt:GetCharacterLoaded() repeat task.wait(0.02) until rt:Character()~=nil end
     function rt:MainGUI() return self.player.PlayerGui.MainGUI or self.player.PlayerGui:WaitForChild("MainGUI") end
     function rt.Disconnect(c) if c and c.Connected then c:Disconnect() end end
-    function rt:Map()
-        for _, v in workspace:GetDescendants() do
-            if v.Name == "Spawns" and v.Parent.Name ~= "Lobby" then return v.Parent end
-        end
-        return nil
-    end
-    function rt:CheckIfGameInProgress() return rt:Map() and true or false end
-    function rt:GetAlivePlayers()
-        local aliveplrs = setmetatable({}, {__mode="v"})
-        local OldPos = self:Character():GetPivot()
-        local pos = CFrame.new(-121.995956, 134.462997, 46.4180717)
-        if not rt:CheckIfGameInProgress() then return nil end
-        local isAlive = rt:CheckIfPlayerIsInARound()
-        if not isAlive then self:Character():PivotTo(pos) end
-        for _, v in pairs(rt.Players:GetPlayers()) do
-            if v.Character and v.Character.PrimaryPart and self:Character().PrimaryPart then
-                local d = (self:Character().PrimaryPart.Position - v.Character.PrimaryPart.Position).Magnitude
-                if isAlive then if d <= 500 then table.insert(aliveplrs, v) end
-                else if d > 500 then table.insert(aliveplrs, v) end end
-            end
-        end
-        if not isAlive then self:Character():PivotTo(OldPos) end
-        return aliveplrs
-    end
+    function rt:Map() for _,v in workspace:GetDescendants() do if v.Name=="Spawns" and v.Parent.Name~="Lobby" then return v.Parent end end return nil end
     function rt:CheckIfPlayerWasInARound() return self.player:GetAttribute("Alive") and true or false end
-    function rt:IsElite() return self.player:GetAttribute("Elite") and true or false end
 
     local function AutoFarmCleanUp()
-        if next(rt.positionChangeConnections) == nil then return end
-        for _, c in pairs(rt.positionChangeConnections) do rt.Disconnect(c) end
+        if next(rt.positionChangeConnections)==nil then return end
+        for _,c in pairs(rt.positionChangeConnections) do rt.Disconnect(c) end
         rt.Disconnect(rt.Added); rt.Disconnect(rt.Removing)
-        table.clear(rt.touchedCoins); table.clear(rt.positionChangeConnections)
-        rt.octree:ClearAllNodes()
+        table.clear(rt.touchedCoins); table.clear(rt.positionChangeConnections); rt.octree:ClearAllNodes()
     end
     local function isCoinTouched(coin) return rt.touchedCoins[coin] end
-    local function markCoinAsTouched(coin)
-        rt.touchedCoins[coin] = true
-        local node = rt.octree:FindFirstNode(coin)
-        if node then rt.octree:RemoveNode(node) end
-    end
+    local function markCoinAsTouched(coin) rt.touchedCoins[coin]=true; local node=rt.octree:FindFirstNode(coin); if node then rt.octree:RemoveNode(node) end end
     local function setupTouchTracking(coin)
-        local t = coin:FindFirstChildWhichIsA("TouchTransmitter")
-        if t then
-            local con; con = t.AncestryChanged:Connect(function(_, parent)
-                if parent == nil then markCoinAsTouched(coin); rt.Disconnect(con) end
-            end)
-            rt.positionChangeConnections[coin] = con
-        end
+        local t=coin:FindFirstChildWhichIsA("TouchTransmitter")
+        if t then local con; con=t.AncestryChanged:Connect(function(_,parent) if parent==nil then markCoinAsTouched(coin); rt.Disconnect(con) end end); rt.positionChangeConnections[coin]=con end
     end
-    local function setupPositionTracking(coin, lastY)
-        local con; con = coin:GetPropertyChangedSignal("Position"):Connect(function()
-            local y = coin.Position.Y
-            if lastY and lastY ~= y then
-                markCoinAsTouched(coin)
-                rt.Disconnect(con)
-                pcall(function() coin:Destroy() end)
-            end
-        end)
-        rt.positionChangeConnections[coin] = con
+    local function setupPositionTracking(coin,lastY)
+        local con; con=coin:GetPropertyChangedSignal("Position"):Connect(function()
+            local y=coin.Position.Y; if lastY and lastY~=y then markCoinAsTouched(coin); rt.Disconnect(con); pcall(function() coin:Destroy() end) end
+        end); rt.positionChangeConnections[coin]=con
     end
-    local function moveToPositionSlowly(target, duration)
-        local start = rt:Character().PrimaryPart.Position
-        local startTime = tick()
-        local nearestNode = rt.octree:GetNearest(rt:Character().PrimaryPart.Position, rt.radius, 1)[1]
-        if nearestNode then
-            local closestCoin = nearestNode.Object
-            if not isCoinTouched(closestCoin) then
-                local t2 = closestCoin.Position
-                if target ~= t2 then target = t2 end
-            end
-        end
+    local function moveToPositionSlowly(target,duration)
+        local start=rt:Character().PrimaryPart.Position; local startTime=tick()
+        local nearestNode=rt.octree:GetNearest(rt:Character().PrimaryPart.Position,rt.radius,1)[1]
+        if nearestNode then local closest=nearestNode.Object; if not isCoinTouched(closest) then local t2=closest.Position; if target~=t2 then target=t2 end end end
         while true do
-            local a = math.min((tick() - startTime) / duration, 1)
-            if rt:Character() == nil then break end
-            rt:Character():PivotTo(CFrame.new(start:Lerp(target, a)))
-            if a >= 1 then task.wait(0.2) break end
-            task.wait()
+            local a=math.min((tick()-startTime)/duration,1); if rt:Character()==nil then break end
+            rt:Character():PivotTo(CFrame.new(start:Lerp(target,a))); if a>=1 then task.wait(0.2) break end; task.wait()
         end
     end
     local function populateOctree()
-        rt.octree:ClearAllNodes()
-        if not rt.coinContainer then return end
-        for _, d in pairs(rt.coinContainer:GetDescendants()) do
+        rt.octree:ClearAllNodes(); if not rt.coinContainer then return end
+        for _,d in pairs(rt.coinContainer:GetDescendants()) do
             if d:IsA("TouchTransmitter") then
-                local coin = d.Parent
-                if not isCoinTouched(coin) then
-                    rt.octree:CreateNode(coin.Position, coin)
-                    setupTouchTracking(coin)
-                end
-                setupPositionTracking(coin, coin.Position.Y)
+                local coin=d.Parent; if not isCoinTouched(coin) then rt.octree:CreateNode(coin.Position,coin); setupTouchTracking(coin) end
+                setupPositionTracking(coin,coin.Position.Y)
             end
         end
-        rt.Added = rt.coinContainer.DescendantAdded:Connect(function(d)
-            if d:IsA("TouchTransmitter") then
-                local coin = d.Parent
-                if not isCoinTouched(coin) then
-                    rt.octree:CreateNode(coin.Position, coin)
-                    setupTouchTracking(coin)
-                    setupPositionTracking(coin, coin.Position.Y)
-                end
-            end
+        rt.Added=rt.coinContainer.DescendantAdded:Connect(function(d)
+            if d:IsA("TouchTransmitter") then local coin=d.Parent; if not isCoinTouched(coin) then rt.octree:CreateNode(coin.Position,coin); setupTouchTracking(coin); setupPositionTracking(coin,coin.Position.Y) end end
         end)
-        rt.Removing = rt.coinContainer.DescendantRemoving:Connect(function(d)
-            if d:IsA("TouchTransmitter") and d.Parent.Name == "Coin_Server" then
-                local coin = d.Parent
-                if isCoinTouched(coin) then
-                    markCoinAsTouched(coin)
-                end
-            end
+        rt.Removing=rt.coinContainer.DescendantRemoving:Connect(function(d)
+            if d:IsA("TouchTransmitter") and d.Parent.Name=="Coin_Server" then local coin=d.Parent; if isCoinTouched(coin) then markCoinAsTouched(coin) end end
         end)
     end
-    local function ChangeState(s) CurrentState = s end
-    local function CheckMurderer() return IsMurderer end
-    local function IsBagFull() return false end -- full bag do watcher Candy xử lý Hop
+    local function ChangeState(s) CurrentState=s end
+    local function IsBagFull() return false end -- full bag đã xử lý ở watcher khác
 
     local function CollectCoins()
-        Working = true
-        local map = rt:Map(); if not map then Working=false return end
-        rt.coinContainer = map:FindFirstChild("CoinContainer"); if not rt.coinContainer then Working=false return end
+        Working=true
+        local map=rt:Map(); if not map then Working=false return end
+        rt.coinContainer=map:FindFirstChild("CoinContainer"); if not rt.coinContainer then Working=false return end
         populateOctree()
-        while CurrentState == State.Action do
-            if IsBagFull() then
-                BagIsFull = true; break
-            end
-            if rt:Character() == nil then break end
-            local nearest = rt.octree:GetNearest(rt:Character().PrimaryPart.Position, rt.radius, 1)[1]
+        while CurrentState==State.Action do
+            if IsBagFull() then break end
+            if rt:Character()==nil then break end
+            local nearest=rt.octree:GetNearest(rt:Character().PrimaryPart.Position,rt.radius,1)[1]
             if nearest then
-                local coin = nearest.Object
-                if not isCoinTouched(coin) then
-                    local target = coin.Position
-                    local dur = (rt:Character().PrimaryPart.Position - target).Magnitude / rt.walkspeed
-                    moveToPositionSlowly(target, dur)
-                    markCoinAsTouched(coin)
-                    task.wait(0.2)
+                local coin=nearest.Object; if not isCoinTouched(coin) then
+                    local target=coin.Position; local dur=(rt:Character().PrimaryPart.Position-target).Magnitude/rt.walkspeed
+                    moveToPositionSlowly(target,dur); markCoinAsTouched(coin); task.wait(0.2)
                 end
-            else
-                task.wait(1)
-            end
+            else task.wait(1) end
         end
         AutoFarmCleanUp()
     end
     local function RespawnState()
         rt:GetCharacterLoaded(); task.wait(1)
-        if LastPosition == nil then
-            local list = rt:GetAlivePlayers()
-            if list and list[1] and list[1].Character and list[1].Character.PrimaryPart then
-                LastPosition = list[1].Character:GetPivot()
-            end
+        if LastPosition==nil then
+            local list=rt:GetAlivePlayers()
+            if list and list[1] and list[1].Character and list[1].Character.PrimaryPart then LastPosition=list[1].Character:GetPivot() end
         end
-        if rt:Character() then
-            rt:GetCharacterLoaded()
-            if LastPosition then rt:Character():PivotTo(LastPosition) end
-        end
+        if rt:Character() then rt:GetCharacterLoaded(); if LastPosition then rt:Character():PivotTo(LastPosition) end end
         if not rt.RoundInProgress then ChangeState(State.WaitingForRound) return end
         ChangeState(State.Action)
     end
-    local function WaitingForRound()
-        Working = false
-        repeat task.wait(0.5) until rt.RoundInProgress and rt:CheckIfPlayerWasInARound()
-        ChangeState(State.Action)
-    end
-    local function waitForRoundEnd()
-        Working = false
-        repeat task.wait(1) until not rt.RoundInProgress
-        ChangeState(State.WaitingForRound)
-    end
-    local function StandStillWait()
-        ChangeState("Nothing"); rt:GetCharacterLoaded(); task.wait(2)
-        ChangeState(State.WaitingForRound)
-    end
+    local function WaitingForRound() Working=false; repeat task.wait(0.5) until rt.RoundInProgress and rt:CheckIfPlayerWasInARound(); ChangeState(State.Action) end
+    local function waitForRoundEnd() Working=false; repeat task.wait(1) until not rt.RoundInProgress; ChangeState(State.WaitingForRound) end
+    local function StandStillWait() ChangeState("Nothing"); rt:GetCharacterLoaded(); task.wait(2); ChangeState(State.WaitingForRound) end
 
-    rt.RoleTracker1 = rt.player.DescendantAdded:Connect(function(d)
-        if d:IsA("Tool") and d.Name == "Knife" then IsMurderer = true end
-    end)
-    rt.InvalidPos = workspace.DescendantAdded:Connect(function(d)
-        if d:IsA("Model") then
-            if string.match(d.Name, "Glitch") and d.Parent.Name ~= "Lobby" then d:Destroy() end
-            if string.match(d.Name, "Invis")  and d.Parent.Name ~= "Lobby" then d:Destroy() end
-        end
-    end)
-    if ROUND_TIMER then
-        ROUND_TIMER:GetPropertyChangedSignal("Text"):Connect(function()
-            rt.RoundInProgress = true
-        end)
-    end
-    local PLAYER_GUI2 = Players.LocalPlayer:WaitForChild("PlayerGui")
-    PLAYER_GUI2.ChildAdded:Connect(function(child)
-        if child:IsA("Sound") then
-            rt.RoundInProgress = false; Working = false; ChangeState(State.WaitingForRound)
-        end
-    end)
-    rt.UserDied = rt.player.CharacterRemoving:Connect(function()
-        local LastText = ROUND_TIMER and ROUND_TIMER.Text or ""
-        if CheckMurderer() then IsMurderer=false; LastPosition=nil; Working=false; rt.RoundInProgress=false; return ChangeState(State.StandStillWait) end
+    rt.RoleTracker1=rt.player.DescendantAdded:Connect(function(d) if d:IsA("Tool") and d.Name=="Knife" then IsMurderer=true end end)
+    if ROUND_TIMER then ROUND_TIMER:GetPropertyChangedSignal("Text"):Connect(function() rt.RoundInProgress=true end) end
+    local PLAYER_GUI2=Players.LocalPlayer:WaitForChild("PlayerGui")
+    PLAYER_GUI2.ChildAdded:Connect(function(child) if child:IsA("Sound") then rt.RoundInProgress=false; Working=false; ChangeState(State.WaitingForRound) end end)
+    rt.UserDied=rt.player.CharacterRemoving:Connect(function()
+        local LastText=ROUND_TIMER and ROUND_TIMER.Text or ""
+        if IsMurderer then IsMurderer=false; LastPosition=nil; Working=false; rt.RoundInProgress=false; return ChangeState(State.StandStillWait) end
         if not rt.RoundInProgress then IsMurderer=false; LastPosition=nil; Working=false; return ChangeState(State.WaitingForRound) end
         task.wait(2)
-        if ROUND_TIMER and LastText == ROUND_TIMER.Text then
-            LastPosition=nil; IsMurderer=false; rt.RoundInProgress=false; Working=false
-            return ChangeState(State.WaitingForRound)
-        end
+        if ROUND_TIMER and LastText==ROUND_TIMER.Text then LastPosition=nil; IsMurderer=false; rt.RoundInProgress=false; Working=false; return ChangeState(State.WaitingForRound) end
         if Working then Working=false; IsMurderer=false; LastPosition=nil; ChangeState(State.RespawnState) end
     end)
-    IsMurderer = rt.player.Backpack:FindFirstChild("Knife") and true or false
+    IsMurderer=rt.player.Backpack:FindFirstChild("Knife") and true or false
 
     task.spawn(function()
         while USE_NEW_TP do
-            if CurrentState == State.WaitingForRound then
-                WaitingForRound()
-            elseif CurrentState == State.Action then
+            if CurrentState==State.WaitingForRound then WaitingForRound()
+            elseif CurrentState==State.Action then
                 CollectCoins()
                 if BagIsFull or not rt.RoundInProgress then
-                    if CheckMurderer() then
-                        BagIsFull, Working, rt.RoundInProgress = false, false, false
-                        pcall(function() rt:Character():FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Dead) end)
-                    else
-                        BagIsFull, Working = false, false
-                        pcall(function() rt:Character():FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Dead) end)
-                        ChangeState(State.WaitingForRoundEnd)
-                    end
+                    BagIsFull=false; Working=false
+                    pcall(function() rt:Character():FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Dead) end)
+                    ChangeState(State.WaitingForRoundEnd)
                 end
-            elseif CurrentState == State.WaitingForRoundEnd then
-                waitForRoundEnd()
-            elseif CurrentState == State.RespawnState then
-                RespawnState()
-            elseif CurrentState == State.StandStillWait then
-                StandStillWait()
-            end
+            elseif CurrentState==State.WaitingForRoundEnd then waitForRoundEnd()
+            elseif CurrentState==State.RespawnState then RespawnState()
+            elseif CurrentState==State.StandStillWait then StandStillWait() end
             task.wait()
         end
     end)
 end
 
--- CHECK INVENTORY: nếu có Godly/Chroma -> Black Screen xanh lá
+-- Inventory check -> BlackScreen xanh lá khi có Godly/Chroma
 task.spawn(function()
-    repeat task.wait(0.5) until rawget(getgenv(), "_BLACKFRAME")
+    repeat task.wait(0.5) until rawget(getgenv(),"_BLACKFRAME")
     local function getWeaponsDB()
-        local ok, db = pcall(function()
-            return require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"))
-        end)
+        local ok,db=pcall(function() return require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync")) end)
         return ok and db and db.Weapons or nil
     end
-    local function hasGodlyOrChromaIn(t, weaponsDB)
-        if type(t) ~= "table" or type(weaponsDB) ~= "table" then return false end
-        for k, v in pairs(t) do
-            local name = (type(k) == "string" and k) or (type(v) == "table" and (v.ItemName or v.Name))
-            if name and weaponsDB[name] then
-                local meta = weaponsDB[name]
-                if meta and (meta.Rarity == "Godly" or meta.Chroma) then return true end
-            end
-            if type(v) == "table" and hasGodlyOrChromaIn(v, weaponsDB) then return true end
+    local function hasGodlyOrChromaIn(t,db)
+        if type(t)~="table" or type(db)~="table" then return false end
+        for k,v in pairs(t) do
+            local name=(type(k)=="string" and k) or (type(v)=="table" and (v.ItemName or v.Name))
+            if name and db[name] then local m=db[name]; if m and (m.Rarity=="Godly" or m.Chroma) then return true end end
+            if type(v)=="table" and hasGodlyOrChromaIn(v,db) then return true end
         end
         return false
     end
     local function inventoryHasGodlyOrChroma()
-        local okPD, pd = pcall(function()
-            return require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData"))
-        end)
+        local okPD,pd=pcall(function() return require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData")) end)
         if not okPD or not pd then return false end
-        local weaponsDB = getWeaponsDB(); if not weaponsDB then return false end
-        return hasGodlyOrChromaIn(pd, weaponsDB)
+        local db=getWeaponsDB(); if not db then return false end
+        return hasGodlyOrChromaIn(pd,db)
     end
     while task.wait(5) do
-        local ok, has = pcall(inventoryHasGodlyOrChroma)
-        if ok and has then
-            local frame = rawget(getgenv(), "_BLACKFRAME")
-            if frame then pcall(function() frame.BackgroundColor3 = Color3.fromRGB(0,255,0) end) end
-            break
-        end
+        local ok,has=pcall(inventoryHasGodlyOrChroma)
+        if ok and has then local frame=rawget(getgenv(),"_BLACKFRAME"); if frame then pcall(function() frame.BackgroundColor3=Color3.fromRGB(0,255,0) end) end; break end
     end
 end)
