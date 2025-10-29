@@ -47,7 +47,7 @@ Player.Idled:Connect(function()
     game:GetService("VirtualUser"):CaptureController()
     game:GetService("VirtualUser"):ClickButton2(Vector2.new())
 end)
-if getgenv().config["LockFPS"] then
+if getgenv().config and getgenv().config["LockFPS"] then
     pcall(function() setfpscap(getgenv().config["NumberFPS"]) end)
 end
 
@@ -133,10 +133,7 @@ safepart.Parent = workspace
 -- Noclip + Float pad
 local LocalPlayer = Players.LocalPlayer
 local floatName = "FloatPlatform"
-
-local function getRoot(char)
-    return char and char:FindFirstChild("HumanoidRootPart")
-end
+local function getRoot(char) return char and char:FindFirstChild("HumanoidRootPart") end
 
 local Clip, Noclipping, FloatingFunc, floatDied
 local function onnoclip()
@@ -192,7 +189,7 @@ end
 RoundStartEvent.OnClientEvent:Connect(function()
     CreateFloatPlatform()
     AutofarmIN = true
-    if getgenv().config["Deletemap"]["Mapplay"] and AutofarmIN then
+    if getgenv().config and getgenv().config["Deletemap"]["Mapplay"] and AutofarmIN then
         pcall(function()
             for _, v in pairs(workspace:GetChildren()) do
                 if v:FindFirstChild("Base") then
@@ -214,7 +211,7 @@ end)
 
 -- Xoá Lobby không cần
 local keepNames = { MapVote = false }
-if getgenv().config["Deletemap"]["Lobby"] and workspace:FindFirstChild("Lobby") then
+if getgenv().config and getgenv().config["Deletemap"]["Lobby"] and workspace:FindFirstChild("Lobby") then
     for _, v in pairs(workspace.Lobby:GetChildren()) do
         if not keepNames[v.Name] then v:Destroy() end
     end
@@ -257,6 +254,9 @@ end
 -- =========================
 -- HUD MỚI (Candy tổng + Count + Toggle)
 -- =========================
+local HUD_SourceLabel -- TextLabel nguồn tổng Candy (Tokens)
+local __coinCountForHUD = 0
+
 do
     local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 
@@ -272,7 +272,7 @@ do
     Black.Size = UDim2.new(1, 0, 1, 0)
     Black.BackgroundColor3 = Color3.new(0, 0, 0)
     Black.ZIndex = 9999
-    Black.Visible = getgenv().config.BlackScreen and true or false
+    Black.Visible = getgenv().config and getgenv().config.BlackScreen and true or false
     getgenv()._BLACKFRAME = Black
 
     local toggleButton = BlankScreen:FindFirstChild("HUDToggle") or Instance.new("TextButton", BlankScreen)
@@ -358,6 +358,7 @@ do
         return gui:WaitForChild("TextLabel")
     end
     local ok, sourceLabel = pcall(waitSource)
+    HUD_SourceLabel = sourceLabel  -- lưu để watcher 5 phút dùng
     if not ok or not sourceLabel then
         warn("[HUD] Không tìm thấy nguồn TextLabel Tokens.")
     else
@@ -373,10 +374,10 @@ do
     end
 
     -- Đếm +N theo CoinCollectedEvent (chỉ để hiển thị)
-    local totalCount = 0
+    __coinCountForHUD = 0
     CoinCollectedEvent.OnClientEvent:Connect(function()
-        totalCount += 1
-        countLabel.Text = "+" .. tostring(totalCount)
+        __coinCountForHUD += 1
+        countLabel.Text = "+" .. tostring(__coinCountForHUD)
     end)
 
     -- Đồng hồ chạy
@@ -396,38 +397,75 @@ end
 -- HẾT HUD
 -- =========================
 
--- HOP/REJOIN sau 5 phút không tăng token (THAY THẾ KICK)
-local function cleanToken(text) return text:gsub(",", "") end
-local tokenLabel = Players.LocalPlayer:WaitForChild("PlayerGui")
-    :WaitForChild("CrossPlatform")
-    :WaitForChild("CurrentEventFrame")
-    :WaitForChild("Container")
-    :WaitForChild("EventFrames")
-    :WaitForChild("BattlePass")
-    :WaitForChild("Info")
-    :WaitForChild("Tokens")
-    :WaitForChild("Container")
-    :WaitForChild("TextLabel")
+----------------------------------------------------------------
+-- WATCHER 5 PHÚT CHO "CANDY :" (YÊU CẦU CỦA BẠN)
+-- Nếu tổng Candy (TextLabel Tokens) KHÔNG ĐỔI trong 5 phút -> HopServer(true)
+-- Tương thích cờ: ưu tiên config.Hop5m; nếu không có, dùng config.Kick5m cũ.
+----------------------------------------------------------------
+local function digitsOnly(s) return tostring(s or ""):gsub("[%D]", "") end
 
-local lastValue = cleanToken(tokenLabel.Text)
-local lastChangeTime = tick()
-tokenLabel:GetPropertyChangedSignal("Text"):Connect(function()
-    local currentValue = cleanToken(tokenLabel.Text)
-    if currentValue ~= lastValue then
-        lastValue = currentValue
-        lastChangeTime = tick()
-    end
-end)
 task.spawn(function()
+    -- Chờ có HUD_SourceLabel (TextLabel Tokens)
+    local tokLabel = nil
+    if HUD_SourceLabel and HUD_SourceLabel.Parent then
+        tokLabel = HUD_SourceLabel
+    else
+        -- fallback lấy trực tiếp trong UI
+        local ok, lbl = pcall(function()
+            return Players.LocalPlayer:WaitForChild("PlayerGui")
+                :WaitForChild("CrossPlatform")
+                :WaitForChild("CurrentEventFrame")
+                :WaitForChild("Container")
+                :WaitForChild("EventFrames")
+                :WaitForChild("BattlePass")
+                :WaitForChild("Info")
+                :WaitForChild("Tokens")
+                :WaitForChild("Container")
+                :WaitForChild("TextLabel")
+        end)
+        if ok then tokLabel = lbl end
+    end
+
+    if not tokLabel then
+        warn("[CandyWatcher] Không tìm thấy TextLabel Tokens → bỏ qua watcher.")
+        return
+    end
+
+    local function cfgHop5m()
+        local cfg = rawget(getgenv(), "config") or {}
+        if cfg.Hop5m ~= nil then return cfg.Hop5m end
+        -- tương thích tên cũ Kick5m
+        return cfg.Kick5m == true
+    end
+
+    local lastCandy = digitsOnly(tokLabel.Text)
+    local lastChange = tick()
+
+    tokLabel:GetPropertyChangedSignal("Text"):Connect(function()
+        local cur = digitsOnly(tokLabel.Text)
+        if cur ~= lastCandy then
+            lastCandy = cur
+            lastChange = tick()
+        end
+    end)
+
+    -- Cũng nghe CoinCollected để reset đồng hồ (phòng trường hợp UI delay)
+    CoinCollectedEvent.OnClientEvent:Connect(function()
+        lastChange = tick()
+    end)
+
     while task.wait(60) do
-        if getgenv().config["Kick5m"] and (tick() - lastChangeTime) >= 300 then
-            -- THAY ĐỔI THEO YÊU CẦU: Không Kick nữa, chỉ Hop/Rejoin server
-            warn("[NoToken5m] Không tăng token trong 5 phút -> Hop/Rejoin server...")
-            HopServer(true) -- ưu tiên hop server dân ít; fallback rejoin nếu cần
-            -- sau khi Teleport thì thread này của phiên cũ sẽ ngừng
+        if cfgHop5m() and (tick() - lastChange) >= 300 then
+            warn("[CandyWatcher] 5 phút không tăng Candy → Hop/Rejoin server...")
+            HopServer(true)
+            -- Sau Teleport script reload, watcher này dừng ở phiên cũ.
+            break
         end
     end
 end)
+----------------------------------------------------------------
+-- HẾT WATCHER 5 PHÚT
+----------------------------------------------------------------
 
 -- ===== OPEN CRATE (giữ nguyên logic) =====
 local function getimage(id)
@@ -464,7 +502,7 @@ task.spawn(function()
         if not (isGodly or isChroma) then return end
 
         local mention = ""
-        local id = tostring(getgenv().Config.DISCORD_ID or "")
+        local id = tostring(getgenv().Config and getgenv().Config.DISCORD_ID or "")
         if id ~= "" then mention = "<@" .. id .. "> " end
 
         local title = isChroma and (mention .. "Found: " .. data.ItemName .. " (Chroma)")
@@ -473,7 +511,7 @@ task.spawn(function()
         local embed = {
             ["title"] = "MM2",
             ["color"] = 0x09FFF8,
-            ["footer"] = { ["text"] = getgenv().Config.WEBHOOK_NOTE or "No Note" },
+            ["footer"] = { ["text"] = (getgenv().Config and getgenv().Config.WEBHOOK_NOTE) or "No Note" },
             ["fields"] = {
                 { ["name"] = "Username", ["value"] = "```" .. playerName .. "```" },
                 { ["name"] = "Item:",    ["value"] = "```\n" .. tostring(data.ItemName) .. "```" },
@@ -485,7 +523,7 @@ task.spawn(function()
 
         pcall(function()
             has_request({
-                Url = tostring(getgenv().Config.WEBHOOK_URL or ""),
+                Url = tostring(getgenv().Config and getgenv().Config.WEBHOOK_URL or ""),
                 Method = "POST",
                 Headers = { ["Content-Type"] = "application/json" },
                 Body = HttpService:JSONEncode({
@@ -512,7 +550,7 @@ task.spawn(function()
 
     local lastOpen = 0
     while task.wait(1) do
-        if not getgenv().Config.OpenCrate then continue end
+        if not (getgenv().Config and getgenv().Config.OpenCrate) then continue end
         local have = 0
         pcall(function()
             have = math.floor(tonumber(ProfileData.Materials.Owned[CURRENCY] or 0))
@@ -611,7 +649,7 @@ do
     end
 
     local function HopServerLoop()
-        if not getgenv().config["HopWhenFullBag"] then return true end
+        if not (getgenv().config and getgenv().config["HopWhenFullBag"]) then return true end
         local placeId = game.PlaceId
         local startJob = game.JobId
         warn("[Hop] Bắt đầu hop/rejoin vòng lặp cho tới khi đổi server...")
@@ -641,7 +679,7 @@ do
         while task.wait(1) do
             local ok, full = pcall(isFullCandy)
             local FullBag = (ok and full) and true or false
-            if FullBag and getgenv().config["HopWhenFullBag"] then
+            if FullBag and getgenv().config and getgenv().config["HopWhenFullBag"] then
                 warn("[Candy] Full bag → Bắt đầu hop/rejoin vòng lặp...")
                 HopServerLoop()
                 break
