@@ -1,4 +1,3 @@
--- Bật TP nhặt theo source dưới
 local USE_NEW_TP = true
 
 repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
@@ -367,7 +366,7 @@ do
         sourceLabel:GetPropertyChangedSignal("Text"):Connect(function()
             middleLabel.Text = "Candy : " .. (sourceLabel.Text or "0")
             local n = tonumber(digits(sourceLabel.Text)) or 0
-            if n >= 90000 then
+            if n >= 109200 then
                 pcall(function() Black.BackgroundColor3 = Color3.fromRGB(0, 255, 0) end)
             end
         end)
@@ -397,7 +396,7 @@ end
 -- HẾT HUD
 -- =========================
 
--- Kick sau 5 phút không tăng token (theo UI Tokens) -> ĐÃ ĐỔI THÀNH HOP/REJOIN ĐẾN KHI QUA SERVER KHÁC
+-- HOP/REJOIN sau 5 phút không tăng token (THAY THẾ KICK)
 local function cleanToken(text) return text:gsub(",", "") end
 local tokenLabel = Players.LocalPlayer:WaitForChild("PlayerGui")
     :WaitForChild("CrossPlatform")
@@ -422,114 +421,110 @@ end)
 task.spawn(function()
     while task.wait(60) do
         if getgenv().config["Kick5m"] and (tick() - lastChangeTime) >= 300 then
-            -- CHỈ SỬA THEO YÊU CẦU: KHÔNG KICK, HOP/REJOIN VÒNG LẶP CHO TỚI KHI SANG SERVER MỚI
-            warn("[NoToken5m] 5 phút không tăng token -> Hop/Rejoin đến khi đổi server...")
-            local placeId = game.PlaceId
-            local startJob = game.JobId
-            while true do
-                -- Thử hop server (ưu tiên ít người), nếu fail sẽ rejoin
-                HopServer(true)
-                local t0 = tick()
-                repeat task.wait(0.5) until game.JobId ~= startJob or (tick() - t0) > 20
-                if game.JobId ~= startJob then
-                    warn("[NoToken5m] Đã đổi server (hop).")
-                    break
-                end
-                -- Fallback rejoin
-                TryTeleport(placeId, nil)
-                local t1 = tick()
-                repeat task.wait(0.5) until game.JobId ~= startJob or (tick() - t1) > 20
-                if game.JobId ~= startJob then
-                    warn("[NoToken5m] Đã đổi server (rejoin).")
-                    break
-                end
-                task.wait(2)
-            end
-            -- sang server mới rồi thì thread cũ cũng dừng
+            -- THAY ĐỔI THEO YÊU CẦU: Không Kick nữa, chỉ Hop/Rejoin server
+            warn("[NoToken5m] Không tăng token trong 5 phút -> Hop/Rejoin server...")
+            HopServer(true) -- ưu tiên hop server dân ít; fallback rejoin nếu cần
+            -- sau khi Teleport thì thread này của phiên cũ sẽ ngừng
         end
     end
 end)
 
--- Webhook helper
-local v_u_13 = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"))
-local playerName = Players.LocalPlayer.Name
-
+-- ===== OPEN CRATE (giữ nguyên logic) =====
 local function getimage(id)
-    local response = request({
-        Url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. id ..
-            "&returnPolicy=PlaceHolder&size=420x420&format=webp",
-        Method = 'GET',
-        Headers = { ["Content-Type"] = "application/json" }
-    })
-    if response and response.StatusCode == 200 then
-        local ok, body = pcall(function() return HttpService:JSONDecode(response.Body) end)
-        if ok and body and body.data and #body.data > 0 then
+    if not has_request then return nil end
+    local ok, response = pcall(function()
+        return has_request({
+            Url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. tostring(id) ..
+                  "&returnPolicy=PlaceHolder&size=420x420&format=webp",
+            Method = 'GET',
+            Headers = { ["Content-Type"] = "application/json" }
+        })
+    end)
+    if ok and response and response.StatusCode == 200 then
+        local bodyOk, body = pcall(function() return HttpService:JSONDecode(response.Body) end)
+        if bodyOk and body and body.data and #body.data > 0 then
             return body.data[1].imageUrl
         end
     end
 end
 
-local function sendwh(item)
-    local data = v_u_13.Weapons[item]
-    if not data then return end
-    local isGodly = data["Rarity"] == "Godly"
-    local isChroma = data["Chroma"] or false
-    if isGodly or isChroma then
-        local title = isChroma and ("# @everyone Found: " .. data["ItemName"] .. " Is Chroma")
-                           or ("@everyone Found: " .. data["ItemName"] )
+task.spawn(function()
+    local okSync, Sync = pcall(function()
+        return SafeWaitDesc(ReplicatedStorage, {"Database","Sync"}, 20) and require(ReplicatedStorage.Database.Sync)
+    end)
+    local weaponsDB = (okSync and Sync and Sync.Weapons) or {}
+
+    local playerName = Players.LocalPlayer.Name
+    local function sendwh(item)
+        if not has_request then return end
+        local data = weaponsDB[item]
+        if not data then return end
+        local isGodly  = (data.Rarity == "Godly")
+        local isChroma = data.Chroma or false
+        if not (isGodly or isChroma) then return end
+
+        local mention = ""
+        local id = tostring(getgenv().Config.DISCORD_ID or "")
+        if id ~= "" then mention = "<@" .. id .. "> " end
+
+        local title = isChroma and (mention .. "Found: " .. data.ItemName .. " (Chroma)")
+                           or (mention .. "Found: " .. data.ItemName)
+
         local embed = {
             ["title"] = "MM2",
             ["color"] = 0x09FFF8,
-            ["footer"] = { ["text"] = getgenv().config["Notes"] or "No Note" },
+            ["footer"] = { ["text"] = getgenv().Config.WEBHOOK_NOTE or "No Note" },
             ["fields"] = {
                 { ["name"] = "Username", ["value"] = "```" .. playerName .. "```" },
-                { ["name"] = "Item:",    ["value"] = "```\n" .. data["ItemName"] .. "```" },
-                { ["name"] = "Rarity:",  ["value"] = "```\n" .. data["Rarity"] .. "```" },
+                { ["name"] = "Item:",    ["value"] = "```\n" .. tostring(data.ItemName) .. "```" },
+                { ["name"] = "Rarity:",  ["value"] = "```\n" .. tostring(data.Rarity) .. "```" },
             },
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-            ["thumbnail"] = { ["url"] = getimage(data["ItemID"]) }
+            ["thumbnail"] = { ["url"] = getimage(data.ItemID) }
         }
-        request({
-            Url = getgenv().config["WHUrl"],
-            Method = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body = HttpService:JSONEncode({
-                username = "MM2",
-                content = title,
-                embeds = { embed }
+
+        pcall(function()
+            has_request({
+                Url = tostring(getgenv().Config.WEBHOOK_URL or ""),
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode({
+                    username = "MM2",
+                    content  = title,
+                    embeds   = { embed }
+                })
             })
-        })
+        end)
     end
-end
 
-task.spawn(function()
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-    local Shop = Remotes:WaitForChild("Shop")
-    local OpenCrate = Shop:WaitForChild("OpenCrate")
+    local PROF_OK, ProfileData = pcall(function()
+        local m = SafeWaitDesc(ReplicatedStorage, {"Modules","ProfileData"}, 20)
+        return m and require(m)
+    end)
+    if not PROF_OK or not ProfileData then return end
 
+    local OpenCrate = SafeWaitDesc(ReplicatedStorage, {"Remotes","Shop","OpenCrate"}, 20)
+    if not (OpenCrate and OpenCrate.IsA and OpenCrate:IsA("RemoteFunction")) then return end
+
+    local BOX_TYPE  = "Halloween2025Box"
+    local CURRENCY  = "Candies2025"
+    local ARGS      = { BOX_TYPE, "MysteryBox", CURRENCY }
+
+    local lastOpen = 0
     while task.wait(1) do
-        if getgenv().config["OpenCrate"] then
-            -- Require module chứa thông tin event
-            local eventModule = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("EventData"))
-            local profileData = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ProfileData"))
-
-            local currentEvent = eventModule.CurrentEvent
-            local eventInfo = eventModule.EventData[currentEvent]
-
-            if eventInfo then
-                local boxType = eventInfo.BoxType
-                local coinType = eventInfo.CoinType
-
-                local ball = profileData.Materials.Owned["Candies2025"] or 0
-                if math.floor(ball) >= 800 then
-                    local args = { boxType, "MysteryBox", coinType }
-                    local result = OpenCrate:InvokeServer(unpack(args))
-                    print("Crate Result:", result)
-                    sendwh(result)
-                end
-            else
-                warn("Không tìm thấy event:", currentEvent)
+        if not getgenv().Config.OpenCrate then continue end
+        local have = 0
+        pcall(function()
+            have = math.floor(tonumber(ProfileData.Materials.Owned[CURRENCY] or 0))
+        end)
+        if have >= 800 and (os.clock() - lastOpen) > 2.5 then
+            lastOpen = os.clock()
+            local okInvoke, result = pcall(function()
+                return OpenCrate:InvokeServer(unpack(ARGS))
+            end)
+            if okInvoke and result then
+                print("Crate Result:", result)
+                pcall(sendwh, result)
             end
         end
     end
@@ -657,104 +652,6 @@ end
 ----------------------------------------------------------------
 -- HẾT PHẦN CHECK FULL CANDY → HOP (LOOP)
 ----------------------------------------------------------------
-
--- =========================
--- TP CŨ – TẮT khi USE_NEW_TP = true
--- =========================
-local ass, nhat, check = false, nil, false
-
-task.spawn(function()
-    while true do
-        if AutofarmIN and not ass and not USE_NEW_TP then
-            local container = returncoincontainer()
-            if container then
-                local children = container:GetChildren()
-                if #children > 0 then
-                    local randomChild = children[math.random(1, #children)]
-                    if randomChild
-                    and randomChild:GetAttribute("CoinID") == getgenv().config["CoinType"]
-                    and randomChild:FindFirstChild("TouchInterest")
-                    and randomChild:IsA("BasePart") then
-                        local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-                        while randomChild
-                        and randomChild:FindFirstChild("TouchInterest")
-                        and AutofarmIN and hrp do
-                            PcallTP(randomChild.CFrame * CFrame.new(0, -3, 0))
-                            task.wait()
-                        end
-                    end
-                end
-            end
-        end
-        task.wait(0.1)
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if not ass and not nhat then
-            nhat = CoinCollectedEvent.OnClientEvent:Connect(function()
-                ass = true
-                nhat:Disconnect(); nhat = nil
-            end)
-        elseif ass and not nhat and not check then
-            nhat = CoinCollectedEvent.OnClientEvent:Connect(function()
-                check = true
-                nhat:Disconnect(); nhat = nil
-            end)
-        end
-        task.wait()
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if AutofarmIN and ass and not USE_NEW_TP then
-            local container = returncoincontainer()
-            local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-            if container and hrp then
-                local nearest = GetNearestValidCoin(container)
-                if nearest and nearest:IsA("BasePart")
-                and nearest:FindFirstChild("TouchInterest")
-                and nearest:GetAttribute("CoinID") == getgenv().config["CoinType"]
-                and (hrp.Position - nearest.Position).Magnitude <= 24 then
-                    local abc = CoinCollectedEvent.OnClientEvent:Connect(function()
-                        check = true
-                    end)
-                    PcallTP(nearest.CFrame * CFrame.new(0, -3, 0))
-                elseif check then
-                    if getgenv().config["SafeFarm"] then PcallTP(bringpose) end
-                    task.wait(getgenv().config["AutofarmDelay"])
-                    ass = false; check = false
-                elseif not check then
-                    ass = false
-                end
-            end
-        end
-        task.wait()
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if AutofarmIN and not USE_NEW_TP then
-            local container = returncoincontainer()
-            local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-            if container and hrp then
-                local nearest = GetNearestValidCoin(container)
-                if nearest and nearest:IsA("BasePart")
-                and nearest:FindFirstChild("TouchInterest")
-                and nearest:GetAttribute("CoinID") == getgenv().config["CoinType"]
-                and (hrp.Position - nearest.Position).Magnitude <= 9 then
-                    firetouchinterest(hrp, nearest, 0)
-                    task.wait(0.05)
-                    firetouchinterest(hrp, nearest, 1)
-                end
-            end
-        end
-        task.wait()
-    end
-end)
 
 -- =========================
 -- TP MỚI Octree – chỉ chạy khi USE_NEW_TP = true
